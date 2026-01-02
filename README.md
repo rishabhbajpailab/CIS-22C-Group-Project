@@ -1,43 +1,47 @@
-=========
+# VS-22C-GP (Perfect Playoff Predictions)
 
-VS-22C-GP
+## Project Pitch
+An NFL playoff predictor with a what-if editor for team records and quick bracket generation from a CSV data set.
 
+## Project Status
+Legacy C++ coursework codebase, actively being documented and modernized.
 
-=========
+## Quickstart
+### Build (Windows / Visual Studio)
+1. Open `FantasySportsApplication.sln` in Visual Studio.
+2. Build the `FantasySportsApplication` project (Debug or Release).
+3. Ensure `data.csv` is present in the working directory (the app defaults to it).
 
+### Run
+1. Run the built executable from Visual Studio or the build output directory.
+2. When prompted, accept the default `data.csv` or enter a compatible CSV file.
 
-- Program produces a NFL (can be adaptable to other sports as well) playoff bracket
-- Allows for a "what-if" situation with to change a team's record and see how it might play out if a 
-given team has a user defined record instead of the records in the program
+### Minimal Example
+- From the main menu, choose `4) Who Will Make The Playoffs?` to display the predicted playoff bracket.
+- Choose `1) Edit Current Teams` to adjust a team's wins/losses/yards and rerun the playoff bracket.
 
-This project was part of my CIS 22C class at De Anza college, this was a class in data structures in C++. The project itself was a team effort (the commit history will show that) but I had put a substantial amount of work into the project and will be taking ownership and updating the project from here.
+## Current Capabilities
+- Loads team data from a CSV file and builds an in-memory roster.
+- Supports interactive edits to team stats (wins/losses/yards).
+- Displays teams unsorted or sorted via a binary tree (yards, wins, losses, PPI, name).
+- Generates AFC/NFC playoff brackets with wildcard selection.
 
-There was no detailed changelog besides commit history which was not the best at times but I am working on documentation for the program
+## Limitations
+- CLI-only UX (Windows-only `CLS`/`PAUSE` usage).
+- Menu option `2) Add or Remove a Team` is not yet wired to functional add/remove logic.
+- Team data must be updated manually in `data.csv` (no automated data feed).
+- No persisted output beyond optional `Output.txt` export.
 
-==========
+## Roadmap
+1. Wire the add/remove team menu flow to actual logic (UX `addMenu`, Implementation `addMenuImp`, and `mainMenueImp` case 2).
+2. Expand CSV validation and error messages in `inputFilePrompt` and `readDataInput`.
+3. Introduce a configurable data refresh step (e.g., external API) that replaces manual `data.csv` updates.
+4. Add automated tests for playoff bracket building and wildcard selection.
+5. Replace Windows-specific console commands to improve cross-platform support.
 
-
-To Do List
-
-
-===========
-+ There is currently no automatic way to update records and I am working on finding an API to implement that functionality
-+ The application is currently just a command line interface, I would like to have a web interface or have some GUI
-+ I need to create documentation for the project and outline detailed functionality
-+ I have not edited any values in a while but I will be updating values for the upcoming season and tracking how the program predicts the playoff bracket will work throughout the 2017-2018 season and look at the accuracy there.
-+ I will be making tweaks to the algorithm based on accuracy of projections on previous seasons.
-+ Any changes from this point on will be documented, I will consider the software as of 3/21/17 version 1.0.0 and move on from there. Once I can get documentation for the changes made in the past I wil renumber the changes and have a copy of the current system in a seperate file for cross referencing.
-
-
-==========
-
-
-Change Log
-
-
-==========
+## Change Log
 
 Version 1.0.0
 --
-+ Change Log created  
-+will adjust version numbering after documentation backlog is fixed.
+- Change Log created.
+- Will adjust version numbering after documentation backlog is fixed.
