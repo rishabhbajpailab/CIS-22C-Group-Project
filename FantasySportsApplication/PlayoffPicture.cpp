@@ -3,6 +3,7 @@
 
 #include "targetver.h"
 #include "Team\Team.h"
+#include "UX.h"
 #include<stdlib.h>
 #include<iostream>
 #include<string>
@@ -40,8 +41,8 @@ int func1()
 	getProjections(PlayoffPicture);
 	printData();
 
-	system("pause");
-	system("cls");
+	pauseScreen();
+	clearScreen();
 
 	return 0;
 }
@@ -50,8 +51,8 @@ void playoffTeams()
 {
 	cout << "Press any key to continue to program" << endl;
 
-	system("pause");
-	system("cls");
+	pauseScreen();
+	clearScreen();
 }
 
 void menu(vector<Team> PlayoffPicture)
@@ -71,7 +72,7 @@ void menu(vector<Team> PlayoffPicture)
 
 	cin >> choice;
 
-	system("CLS");
+	clearScreen();
 
 	switch (choice)
 	{
@@ -86,8 +87,8 @@ void menu(vector<Team> PlayoffPicture)
 	default:
 		flag = true;
 		cout << "Invalid Selection" << endl;
-		system("pause");
-		system("cls");
+		pauseScreen();
+		clearScreen();
 		break;
 	case '3':
 		printSorted();
@@ -131,8 +132,8 @@ void getProjections(vector<Team> PlayoffPicture)
 		}
 		*******************************/
 		
-	system("pause");
-	system("cls");
+	pauseScreen();
+	clearScreen();
 }
 
 
@@ -148,7 +149,7 @@ void printData()
 	cout << "2 Update" << endl;
 
 	cin >> choice;
-		system("cls");
+		clearScreen();
 
 	switch (choice)
 	{
@@ -164,8 +165,8 @@ void printData()
 	default:
 		flag = true;
 		cout << "Invalid Selection" << endl;
-		system("pause");
-		system("cls");
+		pauseScreen();
+		clearScreen();
 		break;
 	}
 

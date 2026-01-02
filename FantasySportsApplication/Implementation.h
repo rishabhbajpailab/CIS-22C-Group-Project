@@ -35,7 +35,7 @@ void buildHash(vector<Team> teams, HashTable<int, Team> &hashTable)
 		hashTable.add(teams[i].keyOutput('y'), teams[i]);
 	}
 }
-void editMenueImp(Team editTeam, int choice)
+void editMenueImp(Team& editTeam, int choice)
 {
 	int intInput;
 	char charInput;
@@ -78,7 +78,7 @@ void mainMenueImp(int choice, vector<Team> teams, HashTable<int, Team> hashTable
 		choice = mainMenu();
 	else if (choice == 7)
 	{
-		system ("CLS");
+		clearScreen();
 		std::cout << "Goodbye" << std::endl;
 	}
 	switch (choice)
@@ -95,7 +95,7 @@ void mainMenueImp(int choice, vector<Team> teams, HashTable<int, Team> hashTable
 		mainMenueImp(0, teams, hashTable);
 		break;
 	case 2:
-		system("PAUSE");
+		pauseScreen();
 		
 		switch (displayTeams(teams))
 		{
@@ -105,14 +105,14 @@ void mainMenueImp(int choice, vector<Team> teams, HashTable<int, Team> hashTable
 		}
 		break;
 	case 3:
-		system("CLS");
+		clearScreen();
 		sortedOutputImp(displayTeams(teams), teams, hashTable);
-		system("PAUSE");
+		pauseScreen();
 		mainMenueImp(0, teams, hashTable);
 		break;
 	case 4:
 		playoffDisplay(playoffBracket(teams));
-		system("PAUSE");
+		pauseScreen();
 		mainMenueImp(0, teams, hashTable);
 		break;
 	case 5:
@@ -209,10 +209,10 @@ int treeSelection()
 
 void efficeincies(vector<Team> teams, HashTable<int,Team> hashTable)
 {
-	system("CLS");
+	clearScreen();
 	std::cout << "There was a load factor of " << hashTable.getLoad() << " in this instance " << std::endl;
 	std::cout << "Please note: due to the structure of the NFL and a set amount of teams the load factor will be 1 barring any errors in the amount of teams" << std::endl;
-	system("PAUSE");
+	pauseScreen();
 }
 
 int exit(vector<Team> teams)
@@ -223,7 +223,7 @@ int exit(vector<Team> teams)
 	std::cin >> charInput;
 	if (charInput == 'n' || charInput == 'N')
 	{
-		system("CLS");
+		clearScreen();
 		retVal = 0;;
 	}
 	 else if (charInput == 'y' || charInput != 'Y')
@@ -240,7 +240,7 @@ int exit(vector<Team> teams)
 	 {
 		 retVal = 6;
 		 std::cout << "you entered an invalid input" << std::endl;
-		 system("PAUSE");
+		 pauseScreen();
 	 }
 	return retVal;
 }
