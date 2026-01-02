@@ -1,12 +1,13 @@
 #include <iostream>
 #include "HashTable/HashTableTest.h"
 #include "Implementation.h"
+#include "UX.h"
 
 
 int main(int argc, const char * argv []) {
 	implementation();
 	__noop;
-	system("PAUSE");
+	pauseScreen();
 	return 0;
 
 }

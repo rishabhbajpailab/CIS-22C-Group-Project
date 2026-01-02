@@ -13,13 +13,50 @@
 #include <istream>
 #include <fstream>
 #include <stdio.h>
+#include <limits>
+
+inline void clearScreen()
+{
+#ifdef _WIN32
+	system("CLS");
+#else
+	std::cout << "\033[2J\033[H";
+	std::cout.flush();
+#endif
+}
+
+inline void pauseScreen()
+{
+#ifdef _WIN32
+	system("PAUSE");
+#else
+	std::cout << "Press Enter to continue..." << std::endl;
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	std::cin.get();
+#endif
+}
+
+inline int readMenuSelection(int minValue, int maxValue)
+{
+	int selection;
+	while (true)
+	{
+		if (std::cin >> selection && selection >= minValue && selection <= maxValue)
+		{
+			return selection;
+		}
+		std::cout << "Please enter a number between " << minValue << " and " << maxValue << "." << std::endl;
+		std::cin.clear();
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	}
+}
 
 
 
 
 std::string inputFilePrompt()
 {
-	system("CLS");
+	clearScreen();
 	char charInput;
 	std::string inputName;
 	std::string defaultName = "data.csv";
@@ -33,12 +70,12 @@ std::string inputFilePrompt()
 			<< std::endl;
 		cin.ignore();
 		getline(cin, inputName);
-		system("PAUSE");
+		pauseScreen();
 	}
 	else if (charInput != 'n' || charInput != 'N')
 	{
 		std::cout << "Moving on to program, default data file being used." << std::endl;
-		system("PAUSE");
+		pauseScreen();
 		return defaultName;
 	}
 	return inputName;
@@ -46,7 +83,7 @@ std::string inputFilePrompt()
 
 void landingPage()
 {
-	system("CLS");
+	clearScreen();
 	std::cout	<< "Welcome to the Perfect Playoff Predections" << std::endl
 				<< std::endl
 				<< "Brought to you by Team 2 (also known as The Best Team)"
@@ -58,7 +95,7 @@ void landingPage()
 int mainMenu()
 {
 	int retVal;
-	system("CLS");
+	clearScreen();
 	std::cout << std::setw(15) << "PPP Main Menu" << std::endl;
 	std::cout
 		<< "1) Edit Current Teams" << std::endl
@@ -67,14 +104,14 @@ int mainMenu()
 		<< "4) Who Will Make The Playoffs?" << std::endl
 		<< "5) Efficency" << std::endl
 		<< "6) Quit" << std::endl;
-	std::cin >> retVal;
+	retVal = readMenuSelection(1, 6);
 	return retVal;
 }
 
 int editMenu()
 {
 	int retVal;
-	system("CLS");
+	clearScreen();
 	std::cout	<< std::setw(15) << "Edit Current Teams" << std::endl;
 	std::cout	<< "Please Select an operation to perform on the selected team" << std::endl;
 	std::cout	<< "1) Add Yards" <<std::endl
@@ -84,13 +121,13 @@ int editMenu()
 				<< "5) Add Losses"<<std::endl
 				<< "6) Sub Losses"<<std::endl
 				<< std::endl;
-	std::cin >> retVal;
+	retVal = readMenuSelection(1, 6);
 	return retVal;
 	;
 }
 void addMenu()
 {
-	system("CLS");
+	clearScreen();
 	std::cout	<< std::setw(15) << "Add/Remove Team Menu" << std::endl;
 	std::cout	<< "PLEASE NOTE: In Order To Keep NFL Playoff Structure intact if you add a team you MUST remove one"
 				<< std::endl
@@ -120,12 +157,12 @@ auto displayTeams(vector<Team>teams) -> int
 			std::cout << teams[i] << std::endl << std::endl;
 			
 		}
-		system("PAUSE");
+		pauseScreen();
 		return 0;
 	}
 	if (charInput!= 'y'&& charInput!='Y' && charInput!='n'&&charInput!='N')
 	std::cerr << "You Entered An Invalid Option, you will be returned to the main menu" << std::endl;
-	system("PAUSE");
+	pauseScreen();
 	return 0;
 	
 }
@@ -133,7 +170,7 @@ auto displayTeams(vector<Team>teams) -> int
 
 void playoffDisplay(vector<Team> bracket)
 {
-	system("CLS");
+	clearScreen();
 	std::cout << "******************************************************************************************" << std::endl;
 	std::cout << "***          NFL                         PLAYOFFS                  2015                ***" << std::endl;
 	std::cout << "******************************************************************************************" << std::endl;
@@ -158,4 +195,3 @@ void playoffDisplay(vector<Team> bracket)
 	}
 	std::cout << "******************************************************************************************" << std::endl;
 }
-

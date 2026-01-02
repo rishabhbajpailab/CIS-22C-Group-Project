@@ -1,6 +1,7 @@
 #include <iostream>
 #include "binaryTree.h"
 #include "binaryTree.cpp"
+#include "../UX.h"
 #include <fstream>
 #include <string>
 using namespace binarytree;
@@ -23,6 +24,6 @@ int main()
 	 teamtree.inorderTree(teamtree.root);
 
 
-	system("pause");
+	pauseScreen();
 	return 1;
 }
