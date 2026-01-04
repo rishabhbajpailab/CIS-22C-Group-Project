@@ -13,6 +13,8 @@ using namespace std;
 void readDataInput();
 void Output();
 
+static const std::string kDefaultDataFile = "data/data.csv";
+
 void readDataInput(string inputFileName, vector<Team>& teams)
 {
 int inWins, inLosses, inYards, inDivision;
@@ -21,6 +23,10 @@ Team dummy;
 //Team inTeam;
 char separator;
 double inPercent;
+if (inputFileName.empty())
+{
+	inputFileName = kDefaultDataFile;
+}
 ifstream myfile;
 myfile.open(inputFileName);
 
@@ -61,5 +67,4 @@ void Output(vector<Team> teams)
 		cout << "File could not be opened." << endl;
 
 }
-
 
