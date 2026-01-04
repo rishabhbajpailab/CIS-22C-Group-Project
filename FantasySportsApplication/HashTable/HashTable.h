@@ -47,6 +47,7 @@ private:
    void allocateArray();
 };
 
+// Educational data-structures implementation for coursework/demo use (not production-ready).
 /*
  Instantiates a HashTable with default values
  
@@ -348,20 +349,17 @@ auto HashTable<KeyType, ItemType>::traverse(void visit(ItemType&)) const
 template<class KeyType, class ItemType>
 inline auto HashTable<KeyType, ItemType>::getLoad()
 {
-	ItemType dummy;
-	int sizeOf = size();
-	int elemsIn=0;
+	int elemsIn = 0;
 	for (int i = 0; i < hashTableSize; i++) {
 		HashTableEntry<KeyType, ItemType> *curPtr = hashTable[i];
 
 		while (curPtr != nullptr) {
-			ItemType item = curPtr->getItem();
+			elemsIn++;
 			curPtr = curPtr->getNext();
 		}
-		elemsIn += 1;
 	}
-	auto retVal = elemsIn / sizeOf;
-	std::cout << "There were: " << elemsIn << " in a hash table with a size of " << sizeOf << std::endl;
+	auto retVal = static_cast<double>(elemsIn) / static_cast<double>(hashTableSize);
+	std::cout << "There were: " << elemsIn << " in a hash table with a size of " << hashTableSize << std::endl;
 	
 	return retVal;
 }
