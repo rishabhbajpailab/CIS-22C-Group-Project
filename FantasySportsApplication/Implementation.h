@@ -1,10 +1,10 @@
 #pragma once
 
-#include "HashTable\HashTable.h"
-#include "HashTable\HashTableEntry.h"
-#include "HashTable\HashTableTest.h"
+#include "HashTable/HashTable.h"
+#include "HashTable/HashTableEntry.h"
+#include "HashTable/HashTableTest.h"
 #include "LinkedList.h"
-#include "Team\Team.h"
+#include "Team/Team.h"
 #include "BST_nT.h"
 #include "fileIO.h"
 #include "UX.h"

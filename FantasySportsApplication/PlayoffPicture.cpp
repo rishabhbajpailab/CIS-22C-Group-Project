@@ -2,7 +2,7 @@
 //
 
 #include "targetver.h"
-#include "Team\Team.h"
+#include "Team/Team.h"
 #include "UX.h"
 #include<stdlib.h>
 #include<iostream>

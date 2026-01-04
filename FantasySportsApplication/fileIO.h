@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Team\Team.h"
+#include "Team/Team.h"
 #include <fstream>
 #include <istream>
 #include <iostream>
@@ -61,5 +61,4 @@ void Output(vector<Team> teams)
 		cout << "File could not be opened." << endl;
 
 }
-
 

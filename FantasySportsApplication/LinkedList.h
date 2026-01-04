@@ -5,7 +5,7 @@ Linked List Implementation File
 #include<iostream>
 #include<string>
 #include<fstream>
-#include "Team\Team.h"
+#include "Team/Team.h"
 
 #pragma once
 
@@ -474,4 +474,3 @@ void Bucket<ItemType>::sort()
 
 	}
 }
-

@@ -1,10 +1,10 @@
 #pragma once
 
 
-#include "Team\Team.h"
-#include "BST\binaryTree.H"
+#include "Team/Team.h"
+#include "BST/binaryTree.H"
 #include "fileIO.h"
-#include "HashTable\HashTable.h"
+#include "HashTable/HashTable.h"
 #include <iostream>
 #include <iomanip>
 #include <vector>
