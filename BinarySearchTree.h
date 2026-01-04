@@ -1,7 +1,8 @@
 /* Binary Search Tree
-Notes: I think I have all the declarations necessary for the BST, maybe even a little more. 
+Notes: I think I have all the declarations necessary for the BST, maybe even a little more.
 I just copied what was in the book, so I hope I got everything.
 Working on function implementations right now, feel free to tell me all the stuff I'm doing wrong :)
+Educational data-structures example intended for coursework/demonstration (not production-ready).
 */
 
 template<class ItemType>
