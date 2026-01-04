@@ -6,7 +6,9 @@
 
 int main(int argc, const char * argv []) {
 	implementation();
+#ifdef _WIN32
 	__noop;
+#endif
 	pauseScreen();
 	return 0;
 
