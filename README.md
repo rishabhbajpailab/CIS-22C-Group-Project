@@ -7,10 +7,14 @@ An NFL playoff predictor with a what-if editor for team records and quick bracke
 Legacy C++ coursework codebase, actively being documented and modernized.
 
 ## Quickstart
+### Build (Linux/macOS)
+1. Run `./build.sh` to compile the CLI (outputs `build/ppp`).
+
+### Run (Linux/macOS)
+1. Run `./run.sh` to launch the CLI with the default `data.csv`.
+
 ### Build (Windows / Visual Studio)
-1. Open `FantasySportsApplication.sln` in Visual Studio.
-2. Build the `FantasySportsApplication` project (Debug or Release).
-3. Ensure `data/data.csv` is present in the working directory (the app defaults to it).
+See `build-windows.md` for Visual Studio build steps.
 
 ### Run
 1. Run the built executable from Visual Studio or the build output directory.

@@ -3,7 +3,7 @@
 
 #include <string>
 #include <strstream>
-#include "Team\Team.h"
+#include "Team/Team.h"
 
 
 class CTreeNode
