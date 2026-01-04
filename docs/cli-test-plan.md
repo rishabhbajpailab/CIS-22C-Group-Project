@@ -4,7 +4,7 @@ This plan covers a quick, manual CLI smoke test for the Fantasy Sports applicati
 
 ## Prerequisites
 - Build the solution or compile the `FantasySportsApplication` target.
-- Ensure `data.csv` is present in the working directory.
+- Ensure `data/data.csv` is present in the working directory.
 
 ## Test Cases
 1. **Launch and exit**

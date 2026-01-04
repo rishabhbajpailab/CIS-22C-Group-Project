@@ -59,8 +59,8 @@ std::string inputFilePrompt()
 	clearScreen();
 	char charInput;
 	std::string inputName;
-	std::string defaultName = "data.csv";
-	std::cout << "The default input file is data.csv, would you like to enter a different data file? [Y/n]"
+	std::string defaultName = "data/data.csv";
+	std::cout << "The default input file is data/data.csv, would you like to enter a different data file? [Y/n]"
 		<< std::endl;
 	std::cin >> charInput;
 	if (charInput == 'y' || charInput == 'Y')
