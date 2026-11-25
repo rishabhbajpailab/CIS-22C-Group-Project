@@ -123,30 +123,49 @@ int main()
 	CHECK_EQ(yards.at("NE"), 5848);
 	CHECK_EQ(yards.at("LV"), 4515);
 
-	// Full league matches data/data.csv on wins, losses and yards for every team
-	// (except data.csv's Tampa Bay typo: 2-12 instead of 2-14).
+	// Full league matches the bundled data/data.csv (generated from these files) for every team.
 	std::vector<Team> league = buildLeague(2014, results, yards);
 	validateLeague(league);
-	std::vector<Team> handEntered = loadTeams("data/data.csv");
-	for (const Team& expected : handEntered)
+	std::vector<Team> bundled = loadLeagueFile("data/data.csv").teams;
+	CHECK_EQ(bundled.size(), league.size());
+	for (std::size_t i = 0; i < bundled.size() && i < league.size(); i++)
 	{
-		std::string name = expected.getName() == "St Louis Rams" ? "St. Louis Rams" : expected.getName();
-		const Team* actual = findTeam(league, name);
-		CHECK(actual != nullptr);
-		if (actual == nullptr)
-		{
-			continue;
-		}
-		CHECK_EQ(actual->getYards(), expected.getYards());
-		CHECK_EQ(actual->getWins(), expected.getWins());
-		CHECK_EQ(actual->getDivVal(), expected.getDivVal());
-		if (name != "Tampa Bay Buccaneers")
-		{
-			CHECK_EQ(actual->getLosses(), expected.getLosses());
-		}
+		CHECK(bundled[i] == league[i]);
 	}
 	const Team* colts = findTeam(league, "Indianapolis Colts");
-	CHECK(colts != nullptr && colts->getPercentage() == 0.688); // 11/16 rounded to 3 places
+	CHECK(colts != nullptr && colts->getPercentage() == 11.0 / 16.0);
+	const Team* bengals = findTeam(league, "Cincinnati Bengals");
+	CHECK(bengals != nullptr && bengals->getTies() == 1);
+
+	// Games: every 2014 regular-season game, mapped onto the league by franchise.
+	std::istringstream seasonGamesCsv(kGames);
+	SeasonGames seasonGames = parseSeasonGames(seasonGamesCsv, 2014);
+	CHECK_EQ(seasonGames.games.size(), static_cast<std::size_t>(256));
+	std::vector<Game> mapped = leagueGames(league, seasonGames.games);
+	CHECK_EQ(mapped.size(), static_cast<std::size_t>(256));
+	CHECK_EQ(league[static_cast<std::size_t>(mapped[0].home)].getName(), std::string("Seattle Seahawks"));
+	CHECK_EQ(league[static_cast<std::size_t>(mapped[0].away)].getName(), std::string("Green Bay Packers"));
+	CHECK_EQ(mapped[0].homeScore, 36);
+	std::vector<Team> renamed = league;
+	renamed[0] = Team("Chicago Monsters", 5, 11, 5233, 1);
+	CHECK_THROWS(leagueGames(renamed, seasonGames.games), DataError);
+	CHECK(findFranchiseByName("Oakland Raiders") == findFranchise("LV"));
+	CHECK(findFranchiseByName("Nowhere Nobodies") == nullptr);
+
+	// Games files round trip, and a season of 0 means "the season in the file".
+	std::ostringstream written;
+	writeSeasonGames(written, 2014, seasonGames.games);
+	std::istringstream reread(written.str());
+	SeasonGames roundTrip = parseSeasonGames(reread, 0, "written");
+	CHECK_EQ(roundTrip.season, 2014);
+	CHECK_EQ(roundTrip.games.size(), seasonGames.games.size());
+	CHECK_EQ(roundTrip.games[0].home, std::string("SEA"));
+	std::istringstream unplayed("season,game_type,week,away_team,away_score,home_team,home_score\n2026,REG,3,GB,,CHI,\n");
+	SeasonGames future = parseSeasonGames(unplayed, 2026);
+	CHECK(!future.games[0].played);
+	std::ostringstream futureText;
+	writeSeasonGames(futureText, 2026, future.games);
+	CHECK(futureText.str().find("2026,REG,3,GB,,CHI,\n") != std::string::npos);
 
 	std::map<std::string, int> missingTeam = yards;
 	missingTeam.erase("NE");
@@ -181,6 +200,21 @@ int main()
 	{
 		CHECK(cached.teams[i] == downloaded.teams[i]);
 	}
+	// The games are cached next to it and loaded back.
+	CHECK_EQ(downloaded.games.size(), static_cast<std::size_t>(256));
+	CHECK(std::filesystem::exists(cacheDir + "/nflverse-2014.games.csv"));
+	CHECK_EQ(gamesPathFor(cacheFile), cacheDir + "/nflverse-2014.games.csv");
+	CHECK_EQ(cached.season, 2014);
+	CHECK_EQ(cached.games.size(), downloaded.games.size());
+
+	// A games file that does not match the teams is ignored, not fatal.
+	{
+		std::ofstream bad(cacheDir + "/nflverse-2014.games.csv");
+		bad << "season,game_type,week,away_team,away_score,home_team,home_score\n2014,REG,1,XYZ,1,GB,0\n";
+	}
+	League withoutGames = loadLeagueFile(cacheFile);
+	CHECK(withoutGames.games.empty());
+	CHECK_EQ(withoutGames.teams.size(), static_cast<std::size_t>(32));
 
 	// Seasons before 2002 are rejected.
 	DownloadOptions tooEarly = options;
@@ -194,7 +228,8 @@ int main()
 	CHECK(fromCache.label.find("(cached)") != std::string::npos);
 	offline.season = 2013;
 	League fromFile = downloadLeagueOrFallback(offline, "data/data.csv");
-	CHECK_EQ(fromFile.label, std::string("data/data.csv"));
+	CHECK_EQ(fromFile.label, std::string("2014 season via nflverse (final regular season), bundled with ppp"));
+	CHECK_EQ(fromFile.games.size(), static_cast<std::size_t>(256));
 
 	// Errors other than 404 are not mistaken for "season not published".
 	DownloadOptions serverError = options;

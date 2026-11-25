@@ -23,3 +23,7 @@ const Franchise* findFranchise(const std::string& code);
 
 // The franchise's full name in the given season, e.g. "Oakland Raiders" for LV in 2019.
 std::string franchiseName(const Franchise& franchise, int season);
+
+// Finds a franchise by any name it has used since 2002, e.g. "Oakland Raiders" or "Las Vegas Raiders".
+// Returns nullptr if the name is unknown.
+const Franchise* findFranchiseByName(const std::string& name);

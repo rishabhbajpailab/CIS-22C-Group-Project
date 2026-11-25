@@ -95,7 +95,8 @@
     <ClCompile Include="Nflverse\DataSource.cpp" />
     <ClCompile Include="Nflverse\Franchises.cpp" />
     <ClCompile Include="Nflverse\NflverseData.cpp" />
-    <ClCompile Include="Playoff\PlayoffLogic.cpp" />
+    <ClCompile Include="Season\Seeding.cpp" />
+    <ClCompile Include="Season\Standings.cpp" />
     <ClCompile Include="Team\Team.cpp" />
     <ClCompile Include="UI\Console.cpp" />
   </ItemGroup>
@@ -110,7 +111,8 @@
     <ClInclude Include="Nflverse\DataSource.h" />
     <ClInclude Include="Nflverse\Franchises.h" />
     <ClInclude Include="Nflverse\NflverseData.h" />
-    <ClInclude Include="Playoff\PlayoffLogic.h" />
+    <ClInclude Include="Season\Seeding.h" />
+    <ClInclude Include="Season\Standings.h" />
     <ClInclude Include="Team\Team.h" />
     <ClInclude Include="UI\Console.h" />
   </ItemGroup>

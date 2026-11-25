@@ -4,18 +4,25 @@
 #include <vector>
 
 #include "../Net/HttpClient.h"
+#include "../Season/Standings.h"
 #include "../Team/Team.h"
 
 // A loaded league plus a short description of where it came from (shown in the playoff header).
 struct League
 {
 	std::vector<Team> teams;
+	std::vector<Game> games; // the season's games (played and unplayed), if known; indices into teams
 	std::string label;
-	int season = 0; // set for downloaded leagues
+	int season = 0; // 0 if unknown
 };
 
-// Loads a data file in the format described in docs/data-format.md. Throws DataError.
+// Loads a data file in the format described in docs/data-format.md. If a games file sits next to it
+// (see gamesPathFor), the season's games are loaded too; a games file that does not match the teams
+// is reported on stderr and ignored. Throws DataError if the data file itself cannot be loaded.
 League loadLeagueFile(const std::string& path);
+
+// The games file that goes with a data file: data/nflverse-2026.csv -> data/nflverse-2026.games.csv.
+std::string gamesPathFor(const std::string& dataPath);
 
 // Path of the cached copy of a downloaded season, e.g. data/nflverse-2026.csv.
 std::string cachePathForSeason(int season);

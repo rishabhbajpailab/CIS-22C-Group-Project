@@ -1,14 +1,17 @@
 #include "App.h"
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <utility>
 
 #include "BST/TeamTree.h"
 #include "IO/DataIO.h"
 #include "Nflverse/Franchises.h"
 #include "Nflverse/NflverseData.h"
-#include "Playoff/PlayoffLogic.h"
+#include "Season/Seeding.h"
+#include "Season/Standings.h"
 #include "UI/Console.h"
 
 namespace
@@ -25,7 +28,7 @@ const SortOption kSortOptions[] = {
 	{"Yards", 'y'},
 	{"Wins", 'w'},
 	{"Losses", 'l'},
-	{"PPI", 'p'},
+	{"Win %", 'c'},
 	{"Name", 'n'},
 };
 constexpr int kSortOptionCount = static_cast<int>(sizeof(kSortOptions) / sizeof(kSortOptions[0]));
@@ -49,7 +52,9 @@ App::App(League league, DownloadOptions downloads)
 void App::setLeague(League league)
 {
 	dataLabel = std::move(league.label);
+	season = league.season;
 	teams = std::move(league.teams);
+	games = std::move(league.games);
 	rebuildHashTable();
 }
 
@@ -197,28 +202,86 @@ void App::displayTeams() const
 
 void App::showPlayoffs() const
 {
-	std::vector<Team> bracket = playoffBracket(teams);
+	const Standings standings(teams, games);
+	const PlayoffField field = seedPlayoffs(standings, playoffSeedsPerConference(season));
+	const bool seasonOver = !games.empty()
+		&& std::all_of(games.begin(), games.end(), [](const Game& game) { return game.played; });
 
 	clearScreen();
 	std::cout << kRule << '\n';
 	printBoxLine("NFL PLAYOFFS");
 	printBoxLine(dataLabel);
-	std::cout << kRule << '\n';
-	printBoxLine("NFC");
-	std::cout << kRule << '\n';
-	for (int i = 0; i < kSeedsPerConference; i++)
+	if (!games.empty() && !seasonOver)
 	{
-		std::cout << "**" << bracket[static_cast<std::size_t>(i)].playoffOutput(i + 1) << '\n';
+		printBoxLine("If the season ended today");
+	}
+	for (const ConferenceSeeding* conference : {&field.nfc, &field.afc})
+	{
+		std::cout << kRule << '\n';
+		printBoxLine(conference->conference == kNfc ? "NFC" : "AFC");
+		std::cout << kRule << '\n';
+		printConference(standings, *conference);
 	}
 	std::cout << kRule << '\n';
-	printBoxLine("AFC");
-	std::cout << kRule << '\n';
-	for (int i = 0; i < kSeedsPerConference; i++)
+	if (!standings.hasGames())
 	{
-		std::cout << "**" << bracket[static_cast<std::size_t>(kSeedsPerConference + i)].playoffOutput(i + 1) << '\n';
+		std::cout << "Note: this data has season totals only, so teams with the same record are ordered\n"
+			<< "alphabetically in place of the NFL tiebreakers (which need game results).\n";
 	}
-	std::cout << kRule << std::endl;
+	else if (standings.hasEditedRecords())
+	{
+		std::cout << "Note: edited records count for each team's overall record; tiebreakers such as\n"
+			<< "head-to-head still use the actual game results.\n";
+	}
+	std::cout << std::flush;
 	pauseScreen();
+}
+
+void App::printConference(const Standings& standings, const ConferenceSeeding& conference) const
+{
+	constexpr int kShownOutside = 3; // teams listed after the playoff field
+	std::cout << "** Seed  Team                           Record\n";
+	for (const Seed& seed : conference.teams)
+	{
+		if (seed.seed > conference.playoffSeeds + kShownOutside)
+		{
+			break;
+		}
+		if (seed.seed == conference.playoffSeeds + 1)
+		{
+			std::cout << "** Next in line:\n";
+		}
+		const Team& team = standings.team(seed.team);
+		std::ostringstream line;
+		line << "** " << std::setw(3);
+		if (conference.inPlayoffs(seed))
+		{
+			line << seed.seed;
+		}
+		else
+		{
+			line << "-";
+		}
+		line << "   " << std::left << std::setw(31) << team.getName()
+			<< std::setw(8) << team.recordText() << std::right;
+		if (seed.divisionWinner)
+		{
+			line << team.getDiv() << " champion";
+			if (!seed.divisionTiebreak.empty())
+			{
+				line << " (won division on " << seed.divisionTiebreak << ")";
+			}
+		}
+		else if (conference.inPlayoffs(seed))
+		{
+			line << "Wild card";
+		}
+		if (!seed.seedTiebreak.empty())
+		{
+			line << (seed.divisionWinner || conference.inPlayoffs(seed) ? "; " : "") << "ahead on " << seed.seedTiebreak;
+		}
+		std::cout << line.str() << '\n';
+	}
 }
 
 void App::showEfficiency() const

@@ -1,8 +1,8 @@
 #include "Team.h"
 
 #include <algorithm>
+#include <cmath>
 #include <ostream>
-#include <sstream>
 #include <utility>
 
 std::string divisionName(int division)
@@ -26,40 +26,25 @@ bool isValidDivision(int division)
 	return division >= kMinDivision && division <= kMaxDivision;
 }
 
-Team::Team(std::string name, int w, int l, int y, double p, int d)
+Team::Team(std::string name, int w, int l, int y, int d, int t)
+	: teamName(std::move(name)), wins(w), losses(l), ties(t), yards(y), division(d)
 {
-	input(std::move(name), w, l, y, p, d);
 }
 
-void Team::input(std::string name, int w, int l, int y, double p, int d)
+double Team::getPercentage() const
 {
-	teamName = std::move(name);
-	wins = w;
-	losses = l;
-	yards = y;
-	percentage = p;
-	division = d;
-	setRank();
+	int games = wins + losses + ties;
+	return games == 0 ? 0.0 : (wins + 0.5 * ties) / games;
 }
 
-void Team::setRank()
+std::string Team::recordText() const
 {
-	double value = yards * percentage;
-	PPI = static_cast<int>(value);
-}
-
-void Team::scaledPPI(int divScalar)
-{
-	// Original PPI formula, kept as-is. The int truncation of each step is part of the result.
-	PPI = static_cast<int>(PPI * (PPI * divScalar * percentage));
-	if (wins >= 8)
+	std::string text = std::to_string(wins) + "-" + std::to_string(losses);
+	if (ties > 0)
 	{
-		PPI = static_cast<int>(PPI + (wins * divScalar) * percentage);
+		text += "-" + std::to_string(ties);
 	}
-	else
-	{
-		PPI = static_cast<int>(PPI - (wins * divScalar) * percentage);
-	}
+	return text;
 }
 
 void Team::changeVals(TeamEdit edit, int amount)
@@ -76,7 +61,6 @@ void Team::changeVals(TeamEdit edit, int amount)
 	yards = std::max(yards, 0);
 	wins = std::max(wins, 0);
 	losses = std::max(losses, 0);
-	setRank();
 }
 
 int Team::keyOutput(char keyVal) const
@@ -85,7 +69,7 @@ int Team::keyOutput(char keyVal) const
 	{
 	case 'w': return wins;
 	case 'l': return losses;
-	case 'p': return PPI;
+	case 'c': return static_cast<int>(std::lround(getPercentage() * 1000.0));
 	case 'n': return nameToInt();
 	case 'y':
 	default: return yards;
@@ -109,26 +93,19 @@ int Team::nameToInt() const
 	return stringASCII;
 }
 
-std::string Team::playoffOutput(int seed) const
-{
-	std::ostringstream output;
-	output << " From the " << getDiv() << " The " << teamName << " with the " << seed << " seed";
-	return output.str();
-}
-
 bool Team::operator==(const Team& rhs) const
 {
-	return PPI == rhs.PPI
-		&& wins == rhs.wins
+	return wins == rhs.wins
 		&& losses == rhs.losses
 		&& yards == rhs.yards
 		&& teamName == rhs.teamName
-		&& percentage == rhs.percentage;
+		&& ties == rhs.ties
+		&& division == rhs.division;
 }
 
 std::ostream& operator<<(std::ostream& os, const Team& team)
 {
-	os << team.teamName << " " << team.wins << " Wins, " << team.losses << " Losses, " << '\n'
-		<< "In the " << team.getDiv() << " with a PPI of " << team.PPI << '\n';
+	os << team.teamName << " (" << team.recordText() << "), " << team.getDiv() << ", "
+		<< team.yards << " yards" << '\n';
 	return os;
 }

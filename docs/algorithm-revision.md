@@ -1,7 +1,7 @@
 # Core Algorithm Revision: Analysis
 
-Status: analysis only. No code has changed yet. This doc breaks down the current playoff algorithm,
-tests it against real seasons, and proposes what to keep, change and add.
+Status: steps 1-3 of the plan (standings, seeding, tiebreakers) are implemented and have replaced the PPI
+bracket; see section 8. Steps 4-8 are next. Sections 2-5 describe the old algorithm as it was before the change.
 
 ## 1. First principles: what the algorithm has to do
 
@@ -131,12 +131,66 @@ Components, roughly in build order:
 
 The first two steps alone fix problems #1-5 and #9 and bring the week-11 result from 63% to about 80%.
 
-## 7. Open questions for the group
+## 7. Decisions
 
-- **Course requirements:** does the PPI or any specific data structure have to stay central to the prediction?
-  If so, the PPI can become the `Rating` input (a fixed version of it).
-- **Data file format:** a simulation needs the schedule, not just season totals. The bundled `data/data.csv`
-  (2014, totals only) would be limited to "standings only" mode, unless we bundle a 2014 games file (the trimmed
-  test fixture already exists).
-- **How far to go on tiebreakers:** all twelve steps, or the first four or five plus a coin toss?
-- **Fate of the old algorithm:** keep it behind a "legacy" option for comparison, or remove it.
+There are no course constraints any more, so:
+
+- The PPI is gone as the prediction engine. A team strength rating will be added in step 4.
+- The old algorithm is removed rather than kept as a "legacy" option. It is in the git history, and sections
+  2-5 document it.
+- Offline mode works from a bundled games file (`data/data.games.csv`), so the tiebreakers work offline too.
+- Every tiebreaker step is implemented that the data allows (see section 8).
+
+## 8. Implementation (steps 1-3)
+
+Code: `FantasySportsApplication/Season/`.
+
+- `Standings` builds every record the rules need from game results: overall, division and conference records,
+  points for and against, and each pair of teams' record and points against each other. The teams'
+  own wins, losses and ties set the overall record, so edits made in the app count. Head-to-head and the other
+  game-based steps still use the real games.
+- `Seeding` ranks each division and seeds the division winners 1-4 by record. It then ranks every other
+  team in wild card order, using 7 seeds per conference from 2020 and 6 before.
+  - Ties are broken with the division procedure (within a division) or the wild card procedure
+    (otherwise).
+  - Before teams from different divisions are compared, only the best-ranked tied team from each division
+    is kept.
+  - Once a team is picked, the rest start the procedure over.
+  - Each placement records the step that decided it, and the bracket shows it.
+
+Tiebreaker steps, in order:
+
+| Division | Wild card |
+|---|---|
+| Head-to-head | Head-to-head (two teams, if they played) / head-to-head sweep (three or more) |
+| Division record | Conference record |
+| Common games | Common games (at least 4 each) |
+| Conference record | Strength of victory |
+| Strength of victory | Strength of schedule |
+| Strength of schedule | Combined ranking in points scored and allowed, conference |
+| Combined ranking in points scored and allowed, conference | Same, league |
+| Same, league | Net points in conference games |
+| Net points in common games | Net points, all games |
+| Net points, all games | Coin toss |
+| Coin toss | |
+
+Where this differs from the NFL's procedures, or interprets them:
+
+- **Net touchdowns is skipped.** nflverse game data has scores but not touchdowns.
+- **The coin toss is alphabetical by team name**, so results are repeatable.
+- **Restarts:** whenever a step eliminates some teams but leaves two or more, the procedure restarts with the
+  remaining teams, using the two-team list if two remain. The NFL's text on where a tie of three or more
+  restarts has changed over the years. This matches the common reading, but it couldn't be checked against
+  the current rulebook text from this environment.
+- **Tied ranks** in the points rankings share the average of their places.
+- **Mid-season**, a team with no games in a category (for example, it hasn't played its division rivals yet)
+  counts as .500 in that category, so an unplayed game neither helps nor hurts it.
+
+Validation, on final regular-season data for every season from 2002 to 2025:
+
+- **Playoff teams:** 300/300 correct. The PPI bracket got 202/300.
+- **First-round byes:** 84/84 correct.
+- **Wild card round matchups (home and away):** 108/108 exactly right, so seeds 2-7 match in every season.
+- `tests/SeedingTests.cpp` pins the real 2014 seeds and the tiebreakers that decided them. For example, Seattle
+  and then Green Bay won the three-way 12-4 tie with Dallas on conference record. It also covers synthetic
+  head-to-head, division record, three-team, wild card division-reduction and edited-record cases.

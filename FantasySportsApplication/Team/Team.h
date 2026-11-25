@@ -28,46 +28,33 @@ class Team
 {
 public:
 	Team() = default;
-	Team(std::string name, int wins, int losses, int yards, double percentage, int division);
+	Team(std::string name, int wins, int losses, int yards, int division, int ties = 0);
 
-	// Replaces every stat and recomputes the Playoff Performance Index (PPI).
-	void input(std::string name, int wins, int losses, int yards, double percentage, int division);
-
-	// Recomputes the PPI from yards and percentage. Call after changing any stat.
-	void setRank();
-
-	// Applies the division strength scalar to the PPI (used when picking division leaders).
-	void scaledPPI(int divScalar);
-
-	// Applies an edit from the edit menu, keeping stats non-negative, then recomputes the PPI.
+	// Applies an edit from the edit menu, keeping stats non-negative.
 	void changeVals(TeamEdit edit, int amount);
 
-	// Sort/hash key for the given key type: 'w' wins, 'l' losses, 'p' PPI, 'n' name, 'y' yards.
-	// Any other key falls back to yards.
+	// Sort/hash key for the given key type: 'w' wins, 'l' losses, 'c' win percentage (x1000),
+	// 'n' name, 'y' yards. Any other key falls back to yards.
 	int keyOutput(char keyVal = 'y') const;
 
 	// Numeric key for sorting by name: the character code of the first letter of the last word.
 	int nameToInt() const;
 
-	// One line of the playoff bracket, e.g. " From the NFC North The Green Bay Packers with the 1 seed".
-	std::string playoffOutput(int seed) const;
+	// Record as "W-L" or "W-L-T" when the team has ties, e.g. "10-5-1".
+	std::string recordText() const;
 
 	const std::string& getName() const { return teamName; }
 	int getWins() const { return wins; }
 	int getLosses() const { return losses; }
+	int getTies() const { return ties; }
 	int getYards() const { return yards; }
-	double getPercentage() const { return percentage; }
-	int getPPI() const { return PPI; }
+	// Win percentage with ties counted as half a win; 0 before any games.
+	double getPercentage() const;
 	int getDivVal() const { return division; }
 	std::string getDiv() const { return divisionName(division); }
 
-	// Ordering is by PPI only.
-	bool operator<(const Team& rhs) const { return PPI < rhs.PPI; }
-	bool operator>(const Team& rhs) const { return PPI > rhs.PPI; }
-	bool operator<=(const Team& rhs) const { return PPI <= rhs.PPI; }
-	bool operator>=(const Team& rhs) const { return PPI >= rhs.PPI; }
+	void setTies(int value) { ties = value < 0 ? 0 : value; }
 
-	// Equality compares PPI and every stat except division.
 	bool operator==(const Team& rhs) const;
 	bool operator!=(const Team& rhs) const { return !(*this == rhs); }
 
@@ -77,8 +64,7 @@ private:
 	std::string teamName;
 	int wins = 0;
 	int losses = 0;
+	int ties = 0;
 	int yards = 0;
-	int PPI = 0; // Playoff Performance Index
 	int division = 0;
-	double percentage = 0.0;
 };

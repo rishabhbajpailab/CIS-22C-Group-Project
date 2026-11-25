@@ -8,7 +8,7 @@ namespace
 {
 Team team(const std::string& name, int yards)
 {
-	return Team(name, 8, 8, yards, 0.5, 1);
+	return Team(name, 8, 8, yards, 1);
 }
 
 std::string names(const TeamTree& tree)

@@ -70,7 +70,7 @@ int main()
 	std::ifstream report(reportPath);
 	std::string firstLine;
 	std::getline(report, firstLine);
-	CHECK_EQ(firstLine, std::string("Team 1-0 8 Wins, 8 Losses, "));
+	CHECK_EQ(firstLine, std::string("Team 1-0 (8-8), NFC North, 5000 yards"));
 	report.close();
 	std::remove(reportPath.c_str());
 

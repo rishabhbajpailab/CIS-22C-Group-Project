@@ -94,3 +94,18 @@ std::string franchiseName(const Franchise& franchise, int season)
 	}
 	return eras.back().name;
 }
+
+const Franchise* findFranchiseByName(const std::string& name)
+{
+	for (const Franchise& franchise : allFranchises())
+	{
+		for (const NameEra& era : nameHistory().at(franchise.code))
+		{
+			if (era.name == name)
+			{
+				return &franchise;
+			}
+		}
+	}
+	return nullptr;
+}

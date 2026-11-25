@@ -1,5 +1,6 @@
 #include "DataSource.h"
 
+#include <cmath>
 #include <ctime>
 #include <filesystem>
 #include <fstream>
@@ -46,7 +47,8 @@ std::string cachePath(const std::string& directory, int season)
 	return (std::filesystem::path(directory) / ("nflverse-" + std::to_string(season) + ".csv")).string();
 }
 
-void writeCache(const std::string& path, const std::string& label, const std::vector<Team>& teams)
+void writeCache(const std::string& path, const std::string& label, const std::vector<Team>& teams,
+	const SeasonGames& games)
 {
 	std::filesystem::path file(path);
 	if (file.has_parent_path())
@@ -64,20 +66,66 @@ void writeCache(const std::string& path, const std::string& label, const std::ve
 	for (const Team& team : teams)
 	{
 		out << team.getWins() << ',' << team.getLosses() << ',' << team.getYards() << ','
-			<< team.getPercentage() << ',' << team.getDivVal() << ',' << team.getName() << '\n';
+			<< std::round(team.getPercentage() * 1000.0) / 1000.0 << ',' << team.getDivVal() << ','
+			<< team.getName() << '\n';
 	}
+
+	std::ofstream gamesOut(gamesPathFor(path));
+	if (!gamesOut)
+	{
+		throw DataError("could not write cache file '" + gamesPathFor(path) + "'");
+	}
+	writeSeasonGames(gamesOut, games.season, games.games);
 }
 
-// First comment line of a cached file, without the leading "# ".
-std::string cachedLabel(const std::string& path)
+// First comment line of a data file, without the leading "# ", or "" if there is none.
+std::string firstComment(const std::string& path)
 {
 	std::ifstream in(path);
 	std::string line;
 	if (std::getline(in, line) && line.rfind("# ", 0) == 0)
 	{
-		return line.substr(2) + " (cached)";
+		if (!line.empty() && line.back() == '\r')
+		{
+			line.pop_back();
+		}
+		return line.substr(2);
 	}
-	return path;
+	return "";
+}
+
+// The season named at the start of a comment like "2014 season via nflverse ...", or 0.
+int seasonFromComment(const std::string& comment)
+{
+	std::istringstream in(comment);
+	int season = 0;
+	std::string word;
+	if (in >> season >> word && word == "season" && season >= kFirstSupportedSeason)
+	{
+		return season;
+	}
+	return 0;
+}
+
+// Sets each team's ties from its games, when its wins and losses agree with them.
+void applyTies(std::vector<Team>& teams, const std::vector<Game>& games)
+{
+	std::vector<Record> records(teams.size());
+	for (const Game& game : games)
+	{
+		if (game.played)
+		{
+			records[static_cast<std::size_t>(game.home)].addResult(game.homeScore, game.awayScore);
+			records[static_cast<std::size_t>(game.away)].addResult(game.awayScore, game.homeScore);
+		}
+	}
+	for (std::size_t i = 0; i < teams.size(); i++)
+	{
+		if (teams[i].getWins() == records[i].wins && teams[i].getLosses() == records[i].losses)
+		{
+			teams[i].setTies(records[i].ties);
+		}
+	}
 }
 
 // Thrown when nflverse has no team stats file for a season yet (HTTP 404).
@@ -108,28 +156,60 @@ League downloadSeason(int season, const DownloadOptions& options)
 		}
 		throw;
 	}
-	std::istringstream games(options.httpGet(nflverseGamesUrl()));
-	SeasonResults results = parseSeasonResults(games, season, "nflverse games.csv");
+	std::istringstream gamesCsv(options.httpGet(nflverseGamesUrl()));
+	SeasonGames games = parseSeasonGames(gamesCsv, season, "nflverse games.csv");
+	SeasonResults results = summarizeResults(games.games);
 
 	std::istringstream stats(statsText);
 	std::map<std::string, int> yards = parseTeamYards(stats, season, "nflverse stats_team_reg_" + std::to_string(season) + ".csv");
 
-	League league{buildLeague(season, results, yards), seasonLabel(season, results), season};
-	writeCache(cachePath(options.cacheDirectory, season), league.label, league.teams);
+	League league;
+	league.teams = buildLeague(season, results, yards);
+	league.games = leagueGames(league.teams, games.games);
+	league.label = seasonLabel(season, results);
+	league.season = season;
+	writeCache(cachePath(options.cacheDirectory, season), league.label, league.teams, games);
 	return league;
 }
 } // namespace
 
 League loadLeagueFile(const std::string& path)
 {
-	League league{loadTeams(path), path};
-	std::ifstream in(path);
-	std::string first;
-	if (std::getline(in, first) && first.find("via nflverse") != std::string::npos)
+	League league;
+	league.teams = loadTeams(path);
+	league.label = path;
+
+	const std::string comment = firstComment(path);
+	if (comment.find("via nflverse") != std::string::npos)
 	{
-		league.label = cachedLabel(path);
+		league.label = comment.find(", downloaded ") != std::string::npos ? comment + " (cached)" : comment;
+	}
+	league.season = seasonFromComment(comment);
+
+	const std::string gamesPath = gamesPathFor(path);
+	if (std::filesystem::exists(gamesPath))
+	{
+		try
+		{
+			std::ifstream in(gamesPath);
+			SeasonGames games = parseSeasonGames(in, league.season, gamesPath);
+			league.games = leagueGames(league.teams, games.games);
+			league.season = games.season;
+			applyTies(league.teams, league.games);
+		}
+		catch (const DataError& error)
+		{
+			std::cerr << "Warning: ignoring " << gamesPath << ": " << error.what() << std::endl;
+			league.games.clear();
+		}
 	}
 	return league;
+}
+
+std::string gamesPathFor(const std::string& dataPath)
+{
+	std::filesystem::path path(dataPath);
+	return path.replace_extension(".games.csv").string();
 }
 
 std::string cachePathForSeason(int season)

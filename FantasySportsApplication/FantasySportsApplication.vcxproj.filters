@@ -42,7 +42,10 @@
     <ClCompile Include="Nflverse\NflverseData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Playoff\PlayoffLogic.cpp">
+    <ClCompile Include="Season\Seeding.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Season\Standings.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Team\Team.cpp">
@@ -83,7 +86,10 @@
     <ClInclude Include="Nflverse\NflverseData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Playoff\PlayoffLogic.h">
+    <ClInclude Include="Season\Seeding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Season\Standings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Team\Team.h">

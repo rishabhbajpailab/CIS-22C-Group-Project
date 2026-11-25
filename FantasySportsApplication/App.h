@@ -5,6 +5,7 @@
 
 #include "HashTable/HashTable.h"
 #include "Nflverse/DataSource.h"
+#include "Season/Seeding.h"
 #include "Team/Team.h"
 
 // Interactive command-line front end for the playoff predictor.
@@ -34,6 +35,7 @@ private:
 	void addRemoveTeam() const;
 	void displayTeams() const;
 	void showPlayoffs() const;
+	void printConference(const Standings& standings, const ConferenceSeeding& conference) const;
 	void showEfficiency() const;
 	void downloadData();
 	bool confirmQuit() const;
@@ -44,6 +46,8 @@ private:
 
 	DownloadOptions downloadOptions;
 	std::string dataLabel;
+	int season = 0;
 	std::vector<Team> teams;
+	std::vector<Game> games; // the season's games, if the data source has them
 	HashTable<int, Team> hashTable; // keyed by total yards
 };

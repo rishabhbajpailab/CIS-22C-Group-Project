@@ -23,7 +23,9 @@ the interactive menus.
    - Choose any team.
    - Pick an edit operation (e.g., `1) Add Yards`) and enter a value.
    - Select `n` when asked to change another value.
-   - Return to `3) Display Teams` and verify the chosen stat and the team's PPI changed.
+   - Return to `3) Display Teams` and verify the chosen stat (and, for wins or losses, the team's record) changed.
+   - Choose `4) Who Will Make The Playoffs?`: an edited record moves the team, and a note says edited records
+     are in use.
    - Subtracting more than a team has leaves the stat at 0.
 
 3. **Display and sort**

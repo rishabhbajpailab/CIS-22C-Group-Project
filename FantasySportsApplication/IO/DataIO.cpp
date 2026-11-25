@@ -111,7 +111,7 @@ std::vector<Team> parseTeams(std::istream& input, const std::string& sourceName)
 			throw DataError(where(sourceName, lineNumber) + "team name is missing");
 		}
 
-		teams.emplace_back(f[5], wins, losses, yards, percentage, division);
+		teams.emplace_back(f[5], wins, losses, yards, division);
 	}
 	return teams;
 }

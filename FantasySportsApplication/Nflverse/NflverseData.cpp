@@ -1,5 +1,6 @@
 #include "NflverseData.h"
 
+#include <algorithm>
 #include <cmath>
 #include <ctime>
 #include <istream>
@@ -59,7 +60,7 @@ double TeamRecord::winPercentage() const
 	return games == 0 ? 0.0 : (wins + 0.5 * ties) / games;
 }
 
-SeasonResults parseSeasonResults(std::istream& gamesCsv, int season, const std::string& sourceName)
+SeasonGames parseSeasonGames(std::istream& gamesCsv, int season, const std::string& sourceName)
 {
 	CsvTable table = CsvTable::parse(gamesCsv, sourceName);
 	const std::size_t seasonCol = table.column("season");
@@ -70,67 +71,149 @@ SeasonResults parseSeasonResults(std::istream& gamesCsv, int season, const std::
 	const std::size_t homeCol = table.column("home_team");
 	const std::size_t homeScoreCol = table.column("home_score");
 
+	SeasonGames result;
+	result.season = season;
+	std::string seasonText = std::to_string(season);
+	const auto& rows = table.rows();
+	for (std::size_t i = 0; i < rows.size(); i++)
+	{
+		const auto& row = rows[i];
+		if (table.field(row, typeCol) != "REG")
+		{
+			continue;
+		}
+		const std::string where = rowLocation(table, i);
+		if (result.season == 0)
+		{
+			if (!parseInt(table.field(row, seasonCol), result.season))
+			{
+				throw DataError(where + "season must be a whole number");
+			}
+			seasonText = std::to_string(result.season);
+		}
+		if (table.field(row, seasonCol) != seasonText)
+		{
+			continue;
+		}
+
+		NflverseGame game;
+		game.away = requireFranchise(table.field(row, awayCol), where).code;
+		game.home = requireFranchise(table.field(row, homeCol), where).code;
+		if (!parseInt(table.field(row, weekCol), game.week))
+		{
+			throw DataError(where + "week must be a whole number");
+		}
+		const std::string& awayText = table.field(row, awayScoreCol);
+		const std::string& homeText = table.field(row, homeScoreCol);
+		if (!awayText.empty() || !homeText.empty())
+		{
+			if (!parseInt(awayText, game.awayScore) || !parseInt(homeText, game.homeScore))
+			{
+				throw DataError(where + "scores must be whole numbers");
+			}
+			game.played = true;
+		}
+		result.games.push_back(game);
+	}
+
+	if (result.games.empty())
+	{
+		throw DataError(sourceName + ": no regular-season games found for "
+			+ (season == 0 ? std::string("any season") : seasonText));
+	}
+	return result;
+}
+
+SeasonResults summarizeResults(const std::vector<NflverseGame>& games)
+{
 	SeasonResults results;
 	for (const Franchise& franchise : allFranchises())
 	{
 		results.records[franchise.code] = TeamRecord{};
 	}
-
-	const std::string seasonText = std::to_string(season);
-	const auto& rows = table.rows();
-	for (std::size_t i = 0; i < rows.size(); i++)
+	for (const NflverseGame& game : games)
 	{
-		const auto& row = rows[i];
-		if (table.field(row, seasonCol) != seasonText || table.field(row, typeCol) != "REG")
+		results.gamesScheduled++;
+		if (!game.played)
 		{
 			continue;
 		}
-		const std::string where = rowLocation(table, i);
-		const Franchise& away = requireFranchise(table.field(row, awayCol), where);
-		const Franchise& home = requireFranchise(table.field(row, homeCol), where);
-		results.gamesScheduled++;
-
-		const std::string& awayText = table.field(row, awayScoreCol);
-		const std::string& homeText = table.field(row, homeScoreCol);
-		if (awayText.empty() && homeText.empty())
+		TeamRecord& away = results.records[game.away];
+		TeamRecord& home = results.records[game.home];
+		if (game.awayScore > game.homeScore)
 		{
-			continue; // not played yet
+			away.wins++;
+			home.losses++;
 		}
-		int awayScore = 0, homeScore = 0, week = 0;
-		if (!parseInt(awayText, awayScore) || !parseInt(homeText, homeScore) || !parseInt(table.field(row, weekCol), week))
+		else if (game.homeScore > game.awayScore)
 		{
-			throw DataError(where + "scores and week must be whole numbers");
-		}
-
-		TeamRecord& awayRecord = results.records[away.code];
-		TeamRecord& homeRecord = results.records[home.code];
-		if (awayScore > homeScore)
-		{
-			awayRecord.wins++;
-			homeRecord.losses++;
-		}
-		else if (homeScore > awayScore)
-		{
-			homeRecord.wins++;
-			awayRecord.losses++;
+			home.wins++;
+			away.losses++;
 		}
 		else
 		{
-			awayRecord.ties++;
-			homeRecord.ties++;
+			away.ties++;
+			home.ties++;
 		}
 		results.gamesPlayed++;
-		if (week > results.lastWeekPlayed)
+		results.lastWeekPlayed = std::max(results.lastWeekPlayed, game.week);
+	}
+	return results;
+}
+
+SeasonResults parseSeasonResults(std::istream& gamesCsv, int season, const std::string& sourceName)
+{
+	return summarizeResults(parseSeasonGames(gamesCsv, season, sourceName).games);
+}
+
+void writeSeasonGames(std::ostream& out, int season, const std::vector<NflverseGame>& games)
+{
+	out << "season,game_type,week,away_team,away_score,home_team,home_score\n";
+	for (const NflverseGame& game : games)
+	{
+		out << season << ",REG," << game.week << ',' << game.away << ',';
+		if (game.played)
 		{
-			results.lastWeekPlayed = week;
+			out << game.awayScore;
+		}
+		out << ',' << game.home << ',';
+		if (game.played)
+		{
+			out << game.homeScore;
+		}
+		out << '\n';
+	}
+}
+
+std::vector<Game> leagueGames(const std::vector<Team>& teams, const std::vector<NflverseGame>& games)
+{
+	std::map<std::string, int> indexByCode;
+	for (std::size_t i = 0; i < teams.size(); i++)
+	{
+		const Franchise* franchise = findFranchiseByName(teams[i].getName());
+		if (franchise == nullptr)
+		{
+			throw DataError("'" + teams[i].getName() + "' is not an NFL franchise name, so its games cannot be matched");
+		}
+		if (!indexByCode.emplace(franchise->code, static_cast<int>(i)).second)
+		{
+			throw DataError("two teams are the same franchise (" + franchise->code + ")");
 		}
 	}
 
-	if (results.gamesScheduled == 0)
+	std::vector<Game> result;
+	result.reserve(games.size());
+	for (const NflverseGame& game : games)
 	{
-		throw DataError(sourceName + ": no regular-season games found for " + seasonText);
+		auto home = indexByCode.find(game.home);
+		auto away = indexByCode.find(game.away);
+		if (home == indexByCode.end() || away == indexByCode.end())
+		{
+			throw DataError("a game's team (" + game.away + " at " + game.home + ") is not in the league");
+		}
+		result.push_back({game.week, home->second, away->second, game.played, game.homeScore, game.awayScore});
 	}
-	return results;
+	return result;
 }
 
 std::map<std::string, int> parseTeamYards(std::istream& statsCsv, int season, const std::string& sourceName)
@@ -185,10 +268,8 @@ std::vector<Team> buildLeague(int season, const SeasonResults& results, const st
 				+ ") in " + std::to_string(season));
 		}
 		const TeamRecord& record = results.records.at(franchise.code);
-		// Round to 3 places, matching the precision of hand-entered data files.
-		double percentage = std::round(record.winPercentage() * 1000.0) / 1000.0;
 		teams.emplace_back(franchiseName(franchise, season), record.wins, record.losses, teamYards->second,
-			percentage, franchise.division);
+			franchise.division, record.ties);
 	}
 	validateLeague(teams);
 	return teams;

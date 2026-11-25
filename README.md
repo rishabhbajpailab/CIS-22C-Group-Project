@@ -1,13 +1,15 @@
 # VS-22C-GP (Perfect Playoff Predictions)
 
 ## Project Pitch
-An NFL playoff predictor with a what-if editor for team records. It downloads current team records and
-yards from [nflverse](https://github.com/nflverse) (free, no API key), or loads them from a CSV file.
+An NFL playoff predictor with a what-if editor for team records. It downloads the current season's games,
+records and yards from [nflverse](https://github.com/nflverse) (free, no API key), or loads them from a CSV file,
+and seeds the playoffs with the NFL's own rules and tiebreakers.
 
 ## Project Status
 Legacy C++ coursework codebase, modernized to C++17 with a CMake build and automated tests.
-The playoff, hash table and binary search tree algorithms are unchanged from the original project;
-regression tests pin their output to what the original code produced.
+The original Playoff Performance Index (PPI) bracket was replaced in version 3.0 by standings, seeding and
+NFL tiebreakers computed from game results. On final regular-season data this reproduces every real playoff
+field and every wild card matchup from 2002 to 2025 (see `docs/algorithm-revision.md`).
 
 ## Quickstart
 Requires CMake 3.16+ and a C++17 compiler (GCC 8+, Clang 7+, or Visual Studio 2019+).
@@ -47,22 +49,26 @@ See `build-windows.md` for Visual Studio and CMake steps.
 ### Minimal Example
 - From the main menu, choose `4) Who Will Make The Playoffs?` to display the predicted playoff bracket.
 - Choose `1) Edit Current Teams` to adjust a team's wins/losses/yards, then rerun the playoff bracket
-  to see the effect (edits recompute the team's PPI).
+  to see the effect. Edited wins and losses change the team's record; tiebreakers still use the real games.
 
 ## Current Capabilities
 - Downloads any season from 2002 on from nflverse, with an offline fallback to the last saved copy.
 - Loads and validates team data from a CSV file (see `docs/data-format.md`): 32 teams, 4 per division.
 - Supports interactive edits to team stats (wins/losses/yards).
-- Displays teams unsorted, or sorted with a binary search tree (yards, wins, losses, PPI, name).
-- Generates AFC/NFC playoff brackets with wildcard selection.
+- Displays teams unsorted, or sorted with a binary search tree (yards, wins, losses, win %, name).
+- Seeds the AFC and NFC playoffs by the NFL's rules: division winners are seeds 1-4 by record, then the wild
+  cards (7 per conference from 2020, 6 before). Ties are broken with the NFL tiebreakers (head-to-head,
+  division and conference records, common games, strength of victory and schedule, points rankings, net
+  points), and the bracket says which tiebreaker decided each place. Mid-season it shows the bracket
+  "if the season ended today" plus the next three teams in line.
 - Reports hash table statistics (load factor, bucket use).
 - Optionally saves the current teams to `Output.txt` on exit.
 
 ## Project Layout
 | Path | Contents |
 | --- | --- |
-| `FantasySportsApplication/Team/` | `Team` model and Playoff Performance Index (PPI) formulas |
-| `FantasySportsApplication/Playoff/` | Playoff bracket algorithm |
+| `FantasySportsApplication/Team/` | `Team` model (record, yards, division) |
+| `FantasySportsApplication/Season/` | Standings from game results, NFL tiebreakers and playoff seeding |
 | `FantasySportsApplication/HashTable/` | Separate-chaining hash table template |
 | `FantasySportsApplication/BST/` | Binary search tree used for sorted output |
 | `FantasySportsApplication/IO/` | CSV reading, data file loading/validation and report output |
@@ -70,39 +76,47 @@ See `build-windows.md` for Visual Studio and CMake steps.
 | `FantasySportsApplication/Net/` | HTTP download via the `curl` command-line tool |
 | `FantasySportsApplication/UI/` | Console input/output helpers |
 | `FantasySportsApplication/App.*`, `main.cpp` | Menu-driven CLI |
-| `tests/` | Unit and regression tests (run with `./test.sh` or `ctest`) |
-| `data/data.csv` | Bundled offline data (2014 regular season, hand-entered) |
+| `tests/` | Unit tests (run with `./test.sh` or `ctest`) |
+| `data/data.csv`, `data/data.games.csv` | Bundled offline data: the 2014 regular season from nflverse, with its games |
 | `tests/fixtures/` | Trimmed copies of the 2014 nflverse files used by the tests |
 
 ## Limitations
 - CLI only.
 - Menu option `2) Add or Remove a Team` is not implemented yet (it explains how to edit the data file instead).
 - Downloads support the 2002 season onward (the current 32-team, 8-division alignment).
-- Ties are counted in the win percentage but not shown, since data files have no ties column.
+- Data files have no ties column, so ties come from the games file next to the data file (downloads and the
+  bundled data have one). A data file without games gets no game-based tiebreakers: teams with the same
+  record are ordered alphabetically.
+- The NFL's "net touchdowns" tiebreaker is skipped (nflverse game data has scores but not touchdowns), and
+  the final coin toss is replaced by alphabetical order so results are repeatable.
+- The bracket is "if the season ended today": it does not yet forecast the remaining games.
 - The hash table is keyed by total yards, so two teams with the same yards total share one entry.
 
 ## Roadmap
-1. Fix the wild card selection so a division winner cannot also be seeded as a wild card
-   (see "Known algorithm quirks"); with live data this now happens in most seasons.
-2. Wire the add/remove team menu flow to actual logic.
-3. Use more nflverse stats (points, turnovers, ...) in the PPI, and measure accuracy against past seasons.
-
-## Known algorithm quirks
-These are deliberate carry-overs from the original algorithm, kept so results do not change:
-- `reorderVec` is not a full sort (its inner loop starts at index 1 instead of `i + 1`).
-- `getWildCards` tries to remove the division leaders from the wild card pool with `==`, but the leaders
-  carry their scaled PPI and the pool does not, so nothing is removed; wild cards come from the
-  "skip the first three" offset instead. A division winner can therefore also be seeded as a wild card:
-  the 2026 (through week 11) bracket lists the Buffalo Bills as both the AFC 2 and 6 seed, and 2020 repeats
-  three teams.
-- Results depend on the order of teams in the data file, because of the `reorderVec` quirk. Downloaded data
-  is always ordered by division and then team code, so results are repeatable.
-- `scaledPPI` multiplies the PPI by itself, so scaled values are in the tens of millions.
+See `docs/algorithm-revision.md` for the full plan. Next:
+1. A team strength rating (point margin per game, shrunk early in the season) to replace the PPI as the
+   "quality" number.
+2. Simulate the remaining games to give each team's odds of making the playoffs, winning its division and
+   each seed.
+3. A what-if editor at the game level ("set who wins this game"), built on the simulator.
+4. Bring the backtest into the repository so every algorithm change is measured against past seasons.
+5. Wire the add/remove team menu flow to actual logic.
 
 ## Change Log
 
-Unreleased
+Unreleased (3.0.0)
 --
+- New playoff algorithm: standings from game results, seeding by the NFL's rules (division winners 1-4,
+  then wild cards; 7 seeds per conference from 2020, 6 before) and the NFL tiebreakers. It replaces the PPI
+  bracket, which picked about two-thirds of real playoff teams and often seeded a team twice.
+- The bracket lists real seeds, shows which tiebreaker decided each place, marks mid-season brackets
+  "If the season ended today", and lists the next three teams in each conference.
+- Downloads also save the season's games (`data/nflverse-<season>.games.csv`), so tiebreakers work offline.
+- `data/data.csv` is now the 2014 season as derived from nflverse (fixing the hand-entered Tampa Bay record
+  and the unexplained `percentage` values), with its games in `data/data.games.csv`.
+- The win percentage is computed from wins, losses and ties (ties count half), so edits change it; the
+  file's `percentage` column is still validated but no longer used.
+- Removed the PPI (`Playoff/PlayoffLogic.*`, `Team::scaledPPI`); the "PPI" sort option is now "Win %".
 - GitHub Actions CI no longer runs automatically on push or pull request (manual "Run workflow" only)
   while builds are validated locally during the proof-of-concept stage.
 
