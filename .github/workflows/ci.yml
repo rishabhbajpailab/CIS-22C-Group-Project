@@ -1,8 +1,10 @@
 name: CI
 
+# Automatic runs are disabled during the proof-of-concept stage; builds are validated locally.
+# To run it by hand: GitHub > Actions > CI > "Run workflow".
+# To re-enable automatic runs, add `push:` and `pull_request:` under `on:`.
 on:
-  push:
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   build-and-test:

@@ -5,7 +5,7 @@ An NFL playoff predictor with a what-if editor for team records. It downloads cu
 yards from [nflverse](https://github.com/nflverse) (free, no API key), or loads them from a CSV file.
 
 ## Project Status
-Legacy C++ coursework codebase, modernized to C++17 with a CMake build, automated tests and CI.
+Legacy C++ coursework codebase, modernized to C++17 with a CMake build and automated tests.
 The playoff, hash table and binary search tree algorithms are unchanged from the original project;
 regression tests pin their output to what the original code produced.
 
@@ -100,6 +100,11 @@ These are deliberate carry-overs from the original algorithm, kept so results do
 - `scaledPPI` multiplies the PPI by itself, so scaled values are in the tens of millions.
 
 ## Change Log
+
+Unreleased
+--
+- GitHub Actions CI no longer runs automatically on push or pull request (manual "Run workflow" only)
+  while builds are validated locally during the proof-of-concept stage.
 
 Version 2.1.0
 --
