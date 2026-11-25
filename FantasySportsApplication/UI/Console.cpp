@@ -81,11 +81,18 @@ std::string readLine()
 	return line;
 }
 
-int readInt(int minValue, int maxValue)
+namespace
+{
+int readIntImpl(int minValue, int maxValue, const int* defaultValue)
 {
 	while (true)
 	{
-		std::istringstream stream(readLine());
+		std::string line = readLine();
+		if (defaultValue != nullptr && lowerTrimmed(line).empty())
+		{
+			return *defaultValue;
+		}
+		std::istringstream stream(line);
 		int value = 0;
 		char extra = 0;
 		if (stream >> value && !(stream >> extra) && value >= minValue && value <= maxValue)
@@ -94,6 +101,17 @@ int readInt(int minValue, int maxValue)
 		}
 		std::cout << "Please enter a number between " << minValue << " and " << maxValue << "." << std::endl;
 	}
+}
+} // namespace
+
+int readInt(int minValue, int maxValue)
+{
+	return readIntImpl(minValue, maxValue, nullptr);
+}
+
+int readIntOrDefault(int minValue, int maxValue, int defaultValue)
+{
+	return readIntImpl(minValue, maxValue, &defaultValue);
 }
 
 bool readYesNo(bool defaultAnswer)

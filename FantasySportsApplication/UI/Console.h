@@ -23,6 +23,9 @@ std::string readLine();
 // Prompts until the user enters a whole number in [minValue, maxValue].
 int readInt(int minValue, int maxValue);
 
+// Like readInt, but an empty answer returns defaultValue (which may be outside the range).
+int readIntOrDefault(int minValue, int maxValue, int defaultValue);
+
 // Prompts until the user enters y/yes or n/no (case-insensitive).
 // An empty answer returns defaultAnswer.
 bool readYesNo(bool defaultAnswer);

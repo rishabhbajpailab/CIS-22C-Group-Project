@@ -24,7 +24,22 @@
     <ClCompile Include="BST\TeamTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="IO\Csv.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="IO\DataIO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Net\HttpClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Nflverse\DataSource.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Nflverse\Franchises.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Nflverse\NflverseData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Playoff\PlayoffLogic.cpp">
@@ -50,7 +65,22 @@
     <ClInclude Include="HashTable\HashTableEntry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="IO\Csv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="IO\DataIO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Net\HttpClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Nflverse\DataSource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Nflverse\Franchises.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Nflverse\NflverseData.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Playoff\PlayoffLogic.h">

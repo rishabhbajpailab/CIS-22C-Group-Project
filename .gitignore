@@ -160,3 +160,6 @@ $RECYCLE.BIN/
 
 # Program output
 Output.txt
+
+# Downloaded nflverse data (regenerate with ./run.sh --download-only)
+data/nflverse-*.csv

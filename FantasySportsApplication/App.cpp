@@ -2,9 +2,12 @@
 
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include "BST/TeamTree.h"
 #include "IO/DataIO.h"
+#include "Nflverse/Franchises.h"
+#include "Nflverse/NflverseData.h"
 #include "Playoff/PlayoffLogic.h"
 #include "UI/Console.h"
 
@@ -37,9 +40,16 @@ void printBoxLine(const std::string& text)
 }
 } // namespace
 
-App::App(const std::string& dataFile)
-	: dataLabel(dataFile), teams(loadTeams(dataFile))
+App::App(League league, DownloadOptions downloads)
+	: downloadOptions(std::move(downloads))
 {
+	setLeague(std::move(league));
+}
+
+void App::setLeague(League league)
+{
+	dataLabel = std::move(league.label);
+	teams = std::move(league.teams);
 	rebuildHashTable();
 }
 
@@ -63,6 +73,7 @@ void App::run()
 		case DisplayTeams: displayTeams(); break;
 		case ShowPlayoffs: showPlayoffs(); break;
 		case ShowEfficiency: showEfficiency(); break;
+		case DownloadData: downloadData(); break;
 		case Quit:
 			if (confirmQuit())
 			{
@@ -83,7 +94,9 @@ int App::mainMenu() const
 		<< "3) Display Teams" << '\n'
 		<< "4) Who Will Make The Playoffs?" << '\n'
 		<< "5) Efficiency" << '\n'
-		<< "6) Quit" << std::endl;
+		<< "6) Download Latest Data (nflverse)" << '\n'
+		<< "7) Quit" << '\n'
+		<< "Current data: " << dataLabel << std::endl;
 	return readInt(EditTeams, Quit);
 }
 
@@ -189,7 +202,7 @@ void App::showPlayoffs() const
 	clearScreen();
 	std::cout << kRule << '\n';
 	printBoxLine("NFL PLAYOFFS");
-	printBoxLine("Data: " + dataLabel);
+	printBoxLine(dataLabel);
 	std::cout << kRule << '\n';
 	printBoxLine("NFC");
 	std::cout << kRule << '\n';
@@ -223,6 +236,35 @@ void App::showEfficiency() const
 	}
 	std::cout << "With a fixed 32-team league and 32 buckets, the load factor is 1.00 unless teams share a yards total."
 		<< std::endl;
+	pauseScreen();
+}
+
+void App::downloadData()
+{
+	clearScreen();
+	const int season = currentSeason();
+	std::cout << "Download team records and yards from nflverse." << '\n'
+		<< "Enter a season from " << kFirstSupportedSeason << " to " << season
+		<< ", or press Enter for the latest season (0 to go back)." << std::endl;
+	int choice = readIntOrDefault(0, season, -1);
+	if (choice == 0)
+	{
+		return;
+	}
+
+	DownloadOptions options = downloadOptions;
+	options.season = choice < 0 ? 0 : choice;
+	std::cout << "Downloading..." << std::endl;
+	try
+	{
+		setLeague(downloadLeague(options));
+		std::cout << "Loaded " << dataLabel << ". Any edits you made to the previous data were replaced." << std::endl;
+	}
+	catch (const std::exception& error)
+	{
+		std::cerr << "Download failed: " << error.what() << '\n'
+			<< "Keeping the current data (" << dataLabel << ")." << std::endl;
+	}
 	pauseScreen();
 }
 

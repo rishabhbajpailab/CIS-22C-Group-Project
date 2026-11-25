@@ -89,7 +89,12 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="App.cpp" />
     <ClCompile Include="BST\TeamTree.cpp" />
+    <ClCompile Include="IO\Csv.cpp" />
     <ClCompile Include="IO\DataIO.cpp" />
+    <ClCompile Include="Net\HttpClient.cpp" />
+    <ClCompile Include="Nflverse\DataSource.cpp" />
+    <ClCompile Include="Nflverse\Franchises.cpp" />
+    <ClCompile Include="Nflverse\NflverseData.cpp" />
     <ClCompile Include="Playoff\PlayoffLogic.cpp" />
     <ClCompile Include="Team\Team.cpp" />
     <ClCompile Include="UI\Console.cpp" />
@@ -99,7 +104,12 @@
     <ClInclude Include="BST\TeamTree.h" />
     <ClInclude Include="HashTable\HashTable.h" />
     <ClInclude Include="HashTable\HashTableEntry.h" />
+    <ClInclude Include="IO\Csv.h" />
     <ClInclude Include="IO\DataIO.h" />
+    <ClInclude Include="Net\HttpClient.h" />
+    <ClInclude Include="Nflverse\DataSource.h" />
+    <ClInclude Include="Nflverse\Franchises.h" />
+    <ClInclude Include="Nflverse\NflverseData.h" />
     <ClInclude Include="Playoff\PlayoffLogic.h" />
     <ClInclude Include="Team\Team.h" />
     <ClInclude Include="UI\Console.h" />

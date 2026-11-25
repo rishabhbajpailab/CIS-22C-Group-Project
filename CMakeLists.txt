@@ -17,6 +17,11 @@ add_library(ppp_core STATIC
   ${SRC}/BST/TeamTree.cpp
   ${SRC}/IO/DataIO.cpp
   ${SRC}/Playoff/PlayoffLogic.cpp
+  ${SRC}/IO/Csv.cpp
+  ${SRC}/Net/HttpClient.cpp
+  ${SRC}/Nflverse/Franchises.cpp
+  ${SRC}/Nflverse/NflverseData.cpp
+  ${SRC}/Nflverse/DataSource.cpp
 )
 target_include_directories(ppp_core PUBLIC ${SRC})
 
@@ -35,7 +40,7 @@ target_link_libraries(ppp PRIVATE ppp_core)
 
 include(CTest)
 if(BUILD_TESTING)
-  foreach(test_name PlayoffLogicTests BracketRegressionTests HashTableTests TeamTreeTests DataIOTests TeamTests)
+  foreach(test_name PlayoffLogicTests BracketRegressionTests HashTableTests TeamTreeTests DataIOTests TeamTests CsvTests NflverseTests)
     add_executable(${test_name} tests/${test_name}.cpp)
     target_link_libraries(${test_name} PRIVATE ppp_core)
     add_test(NAME ${test_name} COMMAND ${test_name} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})

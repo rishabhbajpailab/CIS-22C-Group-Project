@@ -16,3 +16,7 @@ cmake --build build --config Release
 ctest --test-dir build --build-config Release --output-on-failure
 build\Release\ppp.exe data\data.csv
 ```
+
+## Live data
+Downloading from nflverse uses `curl.exe`, which is included with Windows 10 (version 1803) and later.
+Run `curl --version` in a terminal to check.

@@ -4,14 +4,15 @@
 #include <vector>
 
 #include "HashTable/HashTable.h"
+#include "Nflverse/DataSource.h"
 #include "Team/Team.h"
 
 // Interactive command-line front end for the playoff predictor.
 class App
 {
 public:
-	// Loads the league from dataFile. Throws DataError if the file is missing or invalid.
-	explicit App(const std::string& dataFile);
+	// downloads configures the "Download Latest Data" menu option.
+	App(League league, DownloadOptions downloads);
 
 	// Runs the main menu until the user quits.
 	void run();
@@ -24,6 +25,7 @@ private:
 		DisplayTeams,
 		ShowPlayoffs,
 		ShowEfficiency,
+		DownloadData,
 		Quit,
 	};
 
@@ -33,11 +35,14 @@ private:
 	void displayTeams() const;
 	void showPlayoffs() const;
 	void showEfficiency() const;
+	void downloadData();
 	bool confirmQuit() const;
 
 	void listTeams() const;
 	void rebuildHashTable();
+	void setLeague(League league);
 
+	DownloadOptions downloadOptions;
 	std::string dataLabel;
 	std::vector<Team> teams;
 	HashTable<int, Team> hashTable; // keyed by total yards

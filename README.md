@@ -1,7 +1,8 @@
 # VS-22C-GP (Perfect Playoff Predictions)
 
 ## Project Pitch
-An NFL playoff predictor with a what-if editor for team records and quick bracket generation from a CSV data set.
+An NFL playoff predictor with a what-if editor for team records. It downloads current team records and
+yards from [nflverse](https://github.com/nflverse) (free, no API key), or loads them from a CSV file.
 
 ## Project Status
 Legacy C++ coursework codebase, modernized to C++17 with a CMake build, automated tests and CI.
@@ -19,11 +20,26 @@ Requires CMake 3.16+ and a C++17 compiler (GCC 8+, Clang 7+, or Visual Studio 20
 
 ### Run (Linux/macOS)
 ```bash
-./run.sh                    # asks whether to use the default data/data.csv
-./run.sh data/data.csv      # loads a specific file without asking
-./run.sh --no-clear         # keeps scrollback (no screen clearing between menus)
+./run.sh                        # asks where to get data (default: download the latest season)
+./run.sh --download             # download the latest season without asking
+./run.sh --season 2020          # download a past season (2002 or later)
+./run.sh data/data.csv          # load a data file instead
+./run.sh --download-only        # just save data/nflverse-<season>.csv and exit (for scripts)
+./run.sh --no-clear             # keep scrollback (no screen clearing between menus)
 ```
-Run from the repository root (as `run.sh` does) so the default `data/data.csv` path resolves.
+Run from the repository root (as `run.sh` does) so the `data/` paths resolve. Downloading needs the
+`curl` command-line tool, which ships with Windows 10+, macOS and most Linux distributions.
+
+### Live data
+Team data comes from two public nflverse files, fetched over HTTPS with no API key:
+- [`games.csv`](https://github.com/nflverse/nfldata/blob/master/data/games.csv): every game's score since 1999,
+  used for wins, losses and win percentage. Unplayed games are ignored, so mid-season data is "standings so far".
+- [`stats_team_reg_<season>.csv`](https://github.com/nflverse/nflverse-data/releases/tag/stats_team): regular-season
+  team totals, used for net offensive yards (passing + rushing - sack yards).
+
+Each download is saved to `data/nflverse-<season>.csv`. If a later download fails (for example, offline), the
+app uses that saved copy, or `data/data.csv` if there isn't one. Use menu option `6) Download Latest Data` to
+refresh or switch seasons while the app is running. See `docs/data-format.md` for how each column is derived.
 
 ### Build (Windows)
 See `build-windows.md` for Visual Studio and CMake steps.
@@ -34,6 +50,7 @@ See `build-windows.md` for Visual Studio and CMake steps.
   to see the effect (edits recompute the team's PPI).
 
 ## Current Capabilities
+- Downloads any season from 2002 on from nflverse, with an offline fallback to the last saved copy.
 - Loads and validates team data from a CSV file (see `docs/data-format.md`): 32 teams, 4 per division.
 - Supports interactive edits to team stats (wins/losses/yards).
 - Displays teams unsorted, or sorted with a binary search tree (yards, wins, losses, PPI, name).
@@ -48,33 +65,50 @@ See `build-windows.md` for Visual Studio and CMake steps.
 | `FantasySportsApplication/Playoff/` | Playoff bracket algorithm |
 | `FantasySportsApplication/HashTable/` | Separate-chaining hash table template |
 | `FantasySportsApplication/BST/` | Binary search tree used for sorted output |
-| `FantasySportsApplication/IO/` | CSV loading, validation and report output |
+| `FantasySportsApplication/IO/` | CSV reading, data file loading/validation and report output |
+| `FantasySportsApplication/Nflverse/` | nflverse download, franchise table (codes, names, divisions), caching |
+| `FantasySportsApplication/Net/` | HTTP download via the `curl` command-line tool |
 | `FantasySportsApplication/UI/` | Console input/output helpers |
 | `FantasySportsApplication/App.*`, `main.cpp` | Menu-driven CLI |
 | `tests/` | Unit and regression tests (run with `./test.sh` or `ctest`) |
-| `data/data.csv` | Bundled team data (2014 regular season, i.e. the January 2015 playoffs) |
+| `data/data.csv` | Bundled offline data (2014 regular season, hand-entered) |
+| `tests/fixtures/` | Trimmed copies of the 2014 nflverse files used by the tests |
 
 ## Limitations
 - CLI only.
 - Menu option `2) Add or Remove a Team` is not implemented yet (it explains how to edit the data file instead).
-- Team data must be updated manually in `data/data.csv` (no automated data feed yet).
+- Downloads support the 2002 season onward (the current 32-team, 8-division alignment).
+- Ties are counted in the win percentage but not shown, since data files have no ties column.
 - The hash table is keyed by total yards, so two teams with the same yards total share one entry.
 
 ## Roadmap
-1. Fetch current-season data automatically instead of editing `data/data.csv` by hand.
+1. Fix the wild card selection so a division winner cannot also be seeded as a wild card
+   (see "Known algorithm quirks"); with live data this now happens in most seasons.
 2. Wire the add/remove team menu flow to actual logic.
-3. Review the known quirks in the playoff algorithm (see "Known algorithm quirks" below) and decide
-   which to correct, using the regression tests to measure the change.
+3. Use more nflverse stats (points, turnovers, ...) in the PPI, and measure accuracy against past seasons.
 
 ## Known algorithm quirks
 These are deliberate carry-overs from the original algorithm, kept so results do not change:
 - `reorderVec` is not a full sort (its inner loop starts at index 1 instead of `i + 1`).
 - `getWildCards` tries to remove the division leaders from the wild card pool with `==`, but the leaders
   carry their scaled PPI and the pool does not, so nothing is removed; wild cards come from the
-  "skip the first three" offset instead, and a division leader could in principle also be seeded as a wild card.
+  "skip the first three" offset instead. A division winner can therefore also be seeded as a wild card:
+  the 2026 (through week 11) bracket lists the Buffalo Bills as both the AFC 2 and 6 seed, and 2020 repeats
+  three teams.
+- Results depend on the order of teams in the data file, because of the `reorderVec` quirk. Downloaded data
+  is always ordered by division and then team code, so results are repeatable.
 - `scaledPPI` multiplies the PPI by itself, so scaled values are in the tens of millions.
 
 ## Change Log
+
+Version 2.1.0
+--
+- Live data from nflverse: `--download`, `--season YEAR`, `--download-only`, a startup prompt, and main menu
+  option `6) Download Latest Data` (Quit is now option 7).
+- Downloads are cached in `data/nflverse-<season>.csv`, with an offline fallback to the cache or `data/data.csv`.
+- Data files may now include `#` comment lines; the playoff header shows the data source and week.
+- New tests (`CsvTests`, `NflverseTests`) run offline against trimmed real 2014 nflverse files. They check that
+  the derived yards, wins and divisions match the hand-entered `data/data.csv` for every team.
 
 Version 2.0.0
 --

@@ -9,12 +9,12 @@ the interactive menus.
 - Build with `./build.sh` (or the Visual Studio solution).
 - Run from the repository root (`./run.sh`) so `data/data.csv` is found.
 - Tip: `./run.sh --no-clear` keeps the full session in scrollback, and the menus can be scripted by piping
-  input, e.g. `printf 'n\n4\n\n6\ny\nn\n' | ./build/ppp --no-clear`.
+  input, e.g. `printf '2\n4\n\n7\ny\nn\n' | ./build/ppp --no-clear`.
 
 ## Test Cases
 1. **Launch and exit**
    - Start the application.
-   - At the main menu, choose `6) Quit` and confirm exit with `Y`.
+   - At the main menu, choose `7) Quit` and confirm exit with `Y`.
    - Expected: application exits cleanly without errors.
 
 2. **Edit flow persists**
@@ -49,5 +49,17 @@ the interactive menus.
    - Expected: an error naming the file and line number.
 
 7. **Save on exit**
-   - Choose `6) Quit`, answer `y`, then `y` to save.
+   - Choose `7) Quit`, answer `y`, then `y` to save.
    - Expected: `Output.txt` in the working directory lists all 32 teams.
+
+8. **Live download**
+   - Start the application and press Enter at the data source prompt (download the latest season).
+   - Expected: the main menu shows `Current data: <season> season via nflverse (through week N)`, and
+     `data/nflverse-<season>.csv` exists.
+   - Choose `6) Download Latest Data`, enter `2020`.
+   - Expected: `Loaded 2020 season via nflverse (final regular season)`; the bracket header shows 2020.
+
+9. **Offline fallback**
+   - With no network (or `HTTPS_PROXY=http://127.0.0.1:9`), run `./build/ppp --download`.
+   - Expected: a warning, then `Using the last downloaded copy: data/nflverse-<season>.csv`, or
+     `Using data/data.csv instead.` if no copy exists.
