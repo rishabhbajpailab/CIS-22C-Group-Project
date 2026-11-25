@@ -157,3 +157,6 @@ $RECYCLE.BIN/
 
 #XCode
 *.xcodeproj
+
+# Program output
+Output.txt

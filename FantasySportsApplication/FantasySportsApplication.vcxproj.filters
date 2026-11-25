@@ -15,51 +15,51 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="FantasySportsApplication.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="HashTable\HashTableTest.cpp">
+    <ClCompile Include="App.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BST\TeamTree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IO\DataIO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Playoff\PlayoffLogic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Team\Team.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\Console.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="App.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BST\TeamTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="HashTable\HashTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="HashTable\HashTableEntry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HashTable\HashTableTest.h">
+    <ClInclude Include="IO\DataIO.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Implementation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="fileIO.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BST\binaryTree.H">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="LinkedList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UX.h">
+    <ClInclude Include="Playoff\PlayoffLogic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Team\Team.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BST_nT.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Playoff\PlayoffLogic.h">
+    <ClInclude Include="UI\Console.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

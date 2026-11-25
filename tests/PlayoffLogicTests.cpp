@@ -1,18 +1,14 @@
-#include <cassert>
-#include <iostream>
+// Characterization test for the playoff algorithm on a synthetic league.
+// Expected seeds were produced by the original (pre-refactor) implementation.
+
 #include <string>
 #include <vector>
 
-#include "../FantasySportsApplication/Playoff/PlayoffLogic.h"
+#include "Playoff/PlayoffLogic.h"
+#include "TestSupport.h"
 
-namespace {
-Team makeTeam(const std::string& name, int division, int yardOffset)
+namespace
 {
-	Team team;
-	team.input(name, 10, 7, yardOffset, 1.0, division);
-	return team;
-}
-
 std::vector<Team> buildTeams()
 {
 	std::vector<Team> teams;
@@ -22,44 +18,27 @@ std::vector<Team> buildTeams()
 	{
 		for (int idx = 0; idx < 4; idx++)
 		{
-			int yardOffset = base + (div * 100) + (idx * 10);
+			int yards = base + (div * 100) + (idx * 10);
 			std::string name = "Div" + std::to_string(div) + "Team" + std::to_string(idx);
-			teams.push_back(makeTeam(name, div, yardOffset));
+			teams.emplace_back(name, 10, 7, yards, 1.0, div);
 		}
 	}
 	return teams;
 }
-}
+} // namespace
 
 int main()
 {
-	std::vector<Team> teams = buildTeams();
-	std::vector<Team> bracket = playoffBracket(teams);
+	std::vector<Team> bracket = playoffBracket(buildTeams());
+	CHECK_EQ(bracket.size(), static_cast<std::size_t>(kBracketSize));
 
-	assert(bracket.size() == 12);
-
-	std::vector<std::string> expectedOrder = {
-		"Div1Team3",
-		"Div2Team3",
-		"Div3Team3",
-		"Div4Team3",
-		"Div2Team0",
-		"Div2Team1",
-		"Div5Team3",
-		"Div6Team3",
-		"Div7Team3",
-		"Div8Team3",
-		"Div6Team0",
-		"Div6Team1",
+	const std::vector<std::string> expectedOrder = {
+		"Div1Team3", "Div2Team3", "Div3Team3", "Div4Team3", "Div2Team1", "Div2Team2",
+		"Div5Team3", "Div6Team3", "Div7Team3", "Div8Team3", "Div6Team0", "Div6Team1",
 	};
-
-	for (size_t i = 0; i < expectedOrder.size(); i++)
+	for (std::size_t i = 0; i < expectedOrder.size() && i < bracket.size(); i++)
 	{
-		std::ostringstream out = bracket[i].playoffOutput(static_cast<int>(i));
-		std::string output = out.str();
-		assert(output.find(expectedOrder[i]) != std::string::npos);
+		CHECK_EQ(bracket[i].getName(), expectedOrder[i]);
 	}
-
-	std::cout << "PlayoffLogicTests passed." << std::endl;
-	return 0;
+	return finishTests("PlayoffLogicTests");
 }

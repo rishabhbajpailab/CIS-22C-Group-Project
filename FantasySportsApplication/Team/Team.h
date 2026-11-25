@@ -1,340 +1,84 @@
 #pragma once
 
-
-#include <stdio.h>
-#include <iostream>
+#include <iosfwd>
 #include <string>
-#include <vector>
-#include <sstream>
+
+// Division ids used throughout the data files and playoff logic.
+//   1-4: NFC North, East, South, West
+//   5-8: AFC North, East, South, West
+constexpr int kMinDivision = 1;
+constexpr int kMaxDivision = 8;
+
+// Returns the human-readable name for a division id, or "Unknown Division".
+std::string divisionName(int division);
+bool isValidDivision(int division);
+
+// Operations offered by the "Edit Current Teams" menu (values match the menu numbers).
+enum class TeamEdit
+{
+	AddYards = 1,
+	SubtractYards = 2,
+	AddWins = 3,
+	SubtractWins = 4,
+	AddLosses = 5,
+	SubtractLosses = 6,
+};
 
 class Team
 {
 public:
-	Team();
-	Team(std::string, int, int, int, double, int);
-	~Team();
-	std::ostringstream playoffOutput (int pos)
-	{
-		std::ostringstream output;
-		output << " From the " << getDiv() << " The "<< teamName <<" with the "<< pos<< " seed";
-		return output;
-	}
-	void scaledPPI(int divScalar)
-	{
-		PPI *= PPI*divScalar*percentage; 
-		if (wins >= 8)
-		{
-			PPI += (wins*divScalar)*percentage;
-		}
-		else
-		{
-			PPI -= (wins*divScalar)*percentage;
-		}
+	Team() = default;
+	Team(std::string name, int wins, int losses, int yards, double percentage, int division);
 
-	}
-	//to access private member yards for the key for the hash table
-	int keyOutput()
-	{
-		return yards;
-	}
-	
-	int keyOutput(char keyVal)
-	{
-		switch (keyVal)
-		{
-		case 'w':return wins;
-			break;
-		case 'l':return losses;
-			break;
-		case 'p':return PPI;
-			break;
-		case 'n':return nameToInt();
-			break;
-		case 'y': return yards;
-		default:
-			std::cout << "An error occured parsing your input, default key will be used" << std::endl;
-			break;
-		}
-		return yards;
-	};
-	//to access private members or this class from fileIO
-	void input(std::string t, int w, int l, int y, double p, int d)
-	{
-		wins = w;
-		losses = l;
-		yards = y;
-		percentage = p;
-		division = d;
-		teamName = t;
-		setRank();
-	}
-	int getDivVal()
-	{
-		return division;
-	}
-	std::string getDiv()
-	{
-		std::string returnValue;
-		switch (division)
-		{
-		case 1: returnValue = "NFC North";
-			break;
-		case 2: returnValue = "NFC East";
-			break;
-		case 3: returnValue = "NFC South";
-			break;
-		case 4: returnValue = "NFC West";
-			break;
-		case 5: returnValue = "AFC North";
-			break;
-		case 6: returnValue = "AFC East";
-			break;
-		case 7: returnValue = "AFC South";
-			break;
-		case 8: returnValue = "AFC West";
-			break;
-		default: std::cerr << "There was an error reading the division"<<std::endl
-			<<"Please make sure that the division value for "<<teamName<<" is valid.";
-			break;
-		}
-		return returnValue;
-	}
-	//Rank manipulation
-	void setRank()
-	{
-		double value;
-		value = yards*percentage;
-		PPI = value;
+	// Replaces every stat and recomputes the Playoff Performance Index (PPI).
+	void input(std::string name, int wins, int losses, int yards, double percentage, int division);
 
-	}//this will set the playoffIndexScore to position it on the Playoff Performance Index
-					//use this after changing any values or updating any data
-	//V-overloaded = operator defined inline (rhs: Right Hand Side)-V
-	Team & operator=(const Team& rhs) 
-	{
-//LHS (destination)    =     RHS (source)
-		
-		wins = rhs.wins;
-		losses = rhs.losses;
-		yards = rhs.yards;
-		percentage = rhs.percentage;
-		PPI = rhs.PPI;
-		division = rhs.division;
-		percentage = rhs.percentage;
-		teamName = rhs.teamName;
-		return *this;
-	};
-	friend std::ostream& operator<<(std::ostream& os, Team& dt)
-	{
-		os << dt.teamName << " " << dt.wins << " Wins, " << dt.losses <<  " Losses, " << std::endl
-			<< "In the "<<dt.getDiv()<< " with a PPI of "<< dt.PPI<<std::endl;
-		return os;
-	}
-	bool operator < (const Team rhs)
-	{
-		if (PPI < rhs.PPI)
-			return true;
-		else
-		{
-			return false;
-		}
-	};
-	bool operator > (const Team rhs)
-	{
-		
-		if (PPI > rhs.PPI)
-			return true;
-		else
-		{
-			return false;
-		}
-		
-		
-	};
-	bool operator >= (const Team rhs)
-	{
+	// Recomputes the PPI from yards and percentage. Call after changing any stat.
+	void setRank();
 
-		if (PPI >= rhs.PPI)
-			return true;
-		else
-		{
-			return false;
-		}
+	// Applies the division strength scalar to the PPI (used when picking division leaders).
+	void scaledPPI(int divScalar);
 
+	// Applies an edit from the edit menu, keeping stats non-negative, then recomputes the PPI.
+	void changeVals(TeamEdit edit, int amount);
 
-	};
+	// Sort/hash key for the given key type: 'w' wins, 'l' losses, 'p' PPI, 'n' name, 'y' yards.
+	// Any other key falls back to yards.
+	int keyOutput(char keyVal = 'y') const;
 
-	bool operator <= (const Team rhs)
-	{
+	// Numeric key for sorting by name: the character code of the first letter of the last word.
+	int nameToInt() const;
 
-		if (PPI <= rhs.PPI)
-			return true;
-		else
-		{
-			return false;
-		}
+	// One line of the playoff bracket, e.g. " From the NFC North The Green Bay Packers with the 1 seed".
+	std::string playoffOutput(int seed) const;
 
+	const std::string& getName() const { return teamName; }
+	int getWins() const { return wins; }
+	int getLosses() const { return losses; }
+	int getYards() const { return yards; }
+	double getPercentage() const { return percentage; }
+	int getPPI() const { return PPI; }
+	int getDivVal() const { return division; }
+	std::string getDiv() const { return divisionName(division); }
 
-	};
+	// Ordering is by PPI only.
+	bool operator<(const Team& rhs) const { return PPI < rhs.PPI; }
+	bool operator>(const Team& rhs) const { return PPI > rhs.PPI; }
+	bool operator<=(const Team& rhs) const { return PPI <= rhs.PPI; }
+	bool operator>=(const Team& rhs) const { return PPI >= rhs.PPI; }
 
+	// Equality compares PPI and every stat except division.
+	bool operator==(const Team& rhs) const;
+	bool operator!=(const Team& rhs) const { return !(*this == rhs); }
 
-	bool operator == (const Team rhs)
-	{
-		if (PPI == rhs.PPI)
-		{
-			if(wins == rhs.wins)
-			{
-				if (losses == rhs.losses)
-				{
-					if (yards == rhs.yards)
-					{
-						if (teamName == rhs.teamName)
-						{
-							if (percentage == rhs.percentage)
-							{
-								return true;
-							}
-							else
-							{
-								return false;
-							}
-						}
-						else
-						{
-							return false;
-						}
-					}
-					else
-					{
-						return false;
-					}
-				}
-				else
-				{
-					return false;
-				}
-			}
-			else
-			{
-				return false;
-			}
-		}
-		else
-		{
-			return false;
-		}
-	};
-	bool operator != (const Team rhs)
-	{
-		if (PPI == rhs.PPI)
-		{
-			if (wins == rhs.wins)
-			{
-				if (losses == rhs.losses)
-				{
-					if (yards == rhs.yards)
-					{
-						if (teamName == rhs.teamName)
-						{
-							if (percentage == rhs.percentage)
-							{
-								return false;
-							}
-							else
-							{
-								return true;
-							}
-						}
-						else
-						{
-							return true;
-						}
-					}
-					else
-					{
-						return true;
-					}
-				}
-				else
-				{
-					return true;
-				}
-			}
-			else
-			{
-				return true;
-			}
-		}
-		else
-		{
-			return true;
-		}
-	};
-	int nameToInt()
-	{
-		stringASCII = 0;
-		stringASCII = int(teamName.at(0));
-		int size = teamName.length() - 1;
-		for (int i = 1; i <=size; i++)
-		{
-			if (teamName.at(i) == ' ')
-				stringASCII = int(teamName.at(i + 1));
-		};
-		return stringASCII;
-	}
-	void changeVals(int choice, int val)
-	{
-		switch (choice)
-		{
-		case 1: yards += val;
-			break;
-		case 2: yards -= val;
-			break;
-		case 3: wins += val;
-			break;
-		case 4: wins -= val;
-			break;
-		case 5: losses += val;
-			break;
-		case 6: losses -= val;
-			;
-			break;
-		default:
-			break;
-		}
-	};
-
-
+	friend std::ostream& operator<<(std::ostream& os, const Team& team);
 
 private:
-	//explanation for values will be added in a txt file (ie:frDownPerGame: First Downs Per Game)
-	int wins, losses, yards, PPI, division,stringASCII;
-	double percentage;
 	std::string teamName;
-	
+	int wins = 0;
+	int losses = 0;
+	int yards = 0;
+	int PPI = 0; // Playoff Performance Index
+	int division = 0;
+	double percentage = 0.0;
 };
-
-Team::Team(std::string name, int win, int loss, int yard, double percent, int div)
-{
-	teamName = name;
-	wins = win;
-	losses = loss;
-	yards = yard;
-	percentage = percent;
-	division = div;
-}
-Team::Team()
-{
-	wins = 0;
-	losses = 0;
-	yards = 0;
-	PPI = 0;
-	division = 0;
-	stringASCII = 0;
-	percentage = 0.0;
-	teamName = "";
-}
-
-Team::~Team()
-{
-}
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      

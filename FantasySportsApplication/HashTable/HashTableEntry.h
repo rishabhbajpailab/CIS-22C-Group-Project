@@ -6,36 +6,27 @@
 //  Copyright (c) 2014 Dennis. All rights reserved.
 //
 
-#ifndef HASHTABLEENTRY_H
-#define HASHTABLEENTRY_H
+#pragma once
 
-#include <stdio.h>
+#include <utility>
 
+// One key/item pair in a HashTable bucket's singly linked chain.
 template <class KeyType, class ItemType>
 class HashTableEntry
 {
-private:
-   KeyType key;
-   ItemType item;
-   HashTableEntry<KeyType, ItemType>* next;
-   
 public:
-   HashTableEntry(KeyType key, ItemType item) : key(key), item(item), next(nullptr) {};
-   
-   ItemType getItem() const { return item; };
-   KeyType getKey() const { return key; };
-   HashTableEntry<KeyType, ItemType>* getNext() const { return next; };
-   
-   void setItem(const ItemType& item) { this->item = item; };
-   void setNext(HashTableEntry<KeyType, ItemType>* next) { this->next = next; };
+	HashTableEntry(KeyType keyIn, ItemType itemIn)
+		: key(std::move(keyIn)), item(std::move(itemIn)) {}
 
-   HashTableEntry & operator==(const HashTableEntry & SOURCE)
-   {
-	   if (SOURCE.key == key)
-		   return true;
-	   else
-		   return false;
-   }
+	const ItemType& getItem() const { return item; }
+	const KeyType& getKey() const { return key; }
+	HashTableEntry* getNext() const { return next; }
+
+	void setItem(const ItemType& itemIn) { item = itemIn; }
+	void setNext(HashTableEntry* nextIn) { next = nextIn; }
+
+private:
+	KeyType key;
+	ItemType item;
+	HashTableEntry* next = nullptr;
 };
-
-#endif

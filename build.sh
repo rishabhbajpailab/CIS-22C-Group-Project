@@ -1,21 +1,11 @@
 #!/usr/bin/env bash
+# Configures and builds the CLI and tests with CMake. Output: build/ppp
 set -euo pipefail
 
 root_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 build_dir="$root_dir/build"
-mkdir -p "$build_dir"
 
-cxx="${CXX:-g++}"
-
-sources=(
-  "$root_dir/FantasySportsApplication/FantasySportsApplication.cpp"
-  "$root_dir/FantasySportsApplication/PlayoffPicture.cpp"
-  "$root_dir/FantasySportsApplication/BST/binaryTree.cpp"
-  "$root_dir/FantasySportsApplication/BSTree.cpp"
-  "$root_dir/FantasySportsApplication/HashTable/HashTableTest.cpp"
-)
-
-"$cxx" -std=c++14 -I"$root_dir/FantasySportsApplication" "${sources[@]}" -o "$build_dir/ppp"
+cmake -S "$root_dir" -B "$build_dir" -DCMAKE_BUILD_TYPE="${BUILD_TYPE:-Release}"
+cmake --build "$build_dir" --parallel
 
 echo "Build complete: $build_dir/ppp"
